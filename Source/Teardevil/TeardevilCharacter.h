@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
 #include "TeardevilCharacter.generated.h"
 
@@ -20,6 +21,9 @@ class ATeardevilCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 public:
 	ATeardevilCharacter();
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -40,6 +44,27 @@ protected:
 	/** Called for side to side input */
 	void MoveRight(float Value);
 
+	// Called for Right Stick Forward/Backward Input
+	void RightStickForward(float Value);
+	
+	// Called for Right Stick Right/Left Input
+	void RightStickRight(float Value);
+
+	// Logic for Punch
+	void Punch(float X, float Y, float DeltaTime);
+	
+	// Called When Key Pressed
+	void DodgePressed();
+
+	// Called When Key Released
+	void DodgeReleased();
+
+	// Called When Moving for Dodge
+	void DodgeMovement(float DeltaTime);
+	
+	// Called When Dodging
+	void DodgeTimer();
+	
 	/** 
 	 * Called via input to turn at a given rate. 
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
@@ -68,5 +93,49 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	// Components
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* LeftHandCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* RightHandCollision;
+	
+	// Global Variables
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+		float PunchAngle;
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+        float DodgeAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DodgeDelay;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        float DodgeAnimationSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DodgeDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DodgeSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DodgeStopInterpMargin;
+	
+	float RightStickX;
+	float RightStickY;
+
+	FVector CurrentLocation;
+	FVector DodgeLocation;
+
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+		bool bIsPunching;
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+		bool bIsDodging;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+    	bool bIsLeftPunching;
+    UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+    	bool bIsRightPunching;
+	
+	bool bDodgeKeyHeld;
+	bool bDodgeLoop;
+	bool bSetActorX;
+	bool bSetActorY;
+
+	FTimerHandle DodgeTimerHandle;
 };
 
