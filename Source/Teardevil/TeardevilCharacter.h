@@ -116,8 +116,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeStopInterpMargin;
 	
-	float RightStickX;
-	float RightStickY;
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+		float RightStickX;
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+		float RightStickY;
 
 	FVector CurrentLocation;
 	FVector DodgeLocation;

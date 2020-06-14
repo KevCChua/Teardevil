@@ -66,6 +66,7 @@ ATeardevilCharacter::ATeardevilCharacter()
 
 void ATeardevilCharacter::Tick(float DeltaTime)
 {
+	Super::Tick(DeltaTime);
 	// Set Current Location To Variable
 	CurrentLocation = GetActorLocation();
 	// Call Function
