@@ -51,7 +51,7 @@ protected:
 	void RightStickRight(float Value);
 
 	// Logic for Punch
-	void Punch(float X, float Y, float DeltaTime);
+	void Punch(float X, float Y);
 	
 	// Called When Key Pressed
 	void DodgePressed();

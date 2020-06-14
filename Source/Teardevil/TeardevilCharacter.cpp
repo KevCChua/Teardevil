@@ -67,7 +67,7 @@ void ATeardevilCharacter::Tick(float DeltaTime)
 	// Set Current Location To Variable
 	CurrentLocation = GetActorLocation();
 	// Call Function
-	Punch(RightStickX, RightStickY, DeltaTime);
+	Punch(RightStickX, RightStickY);
 	// Check If Dodging
 	if (bIsDodging)
 	{
@@ -180,7 +180,7 @@ void ATeardevilCharacter::RightStickRight(float Value)
 	RightStickX = Value;
 }
 
-void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
+void ATeardevilCharacter::Punch(float X, float Y)
 {
 	// Get Angle Of Right Stick
 	PunchAngle = FMath::RadiansToDegrees(FMath::Atan2(Y, X));
@@ -193,8 +193,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 			// Set Punching Variable
 			bIsPunching = true;
 			// Rotate Character to Direction Pressed
-			SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, PunchAngle, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
-			//SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
+			SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
 			// Create Array to Hold Overlapping Actors
 			TArray<AActor*> CollectedActors;
 			// If Punching With Left Hand
@@ -295,7 +294,6 @@ void ATeardevilCharacter::DodgeMovement(float DeltaTime)
 		//Set X Only
 		FVector X = DodgeLocation;
 		X.Y = CurrentLocation.Y;
-		X.Z = CurrentLocation.Z;
 		// Check If Close To Destination (Within Margin)
 		if (CurrentLocation.X  + DodgeStopInterpMargin >= X.X && CurrentLocation.X - DodgeStopInterpMargin <= X.X )
 		{
@@ -316,7 +314,6 @@ void ATeardevilCharacter::DodgeMovement(float DeltaTime)
 		// Set Y Only
 		FVector Y = DodgeLocation;
 		Y.X = CurrentLocation.X;
-		Y.Z = CurrentLocation.Z;
 		// Check If Close To Destination (Within Margin)
 		if (CurrentLocation.Y  + DodgeStopInterpMargin >= Y.Y && CurrentLocation.Y - DodgeStopInterpMargin <= Y.Y)
 		{
