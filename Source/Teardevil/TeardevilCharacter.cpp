@@ -20,8 +20,8 @@ ATeardevilCharacter::ATeardevilCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
+	BaseTurnRate = 45.0f;
+	BaseLookUpRate = 45.0f;
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -194,51 +194,55 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 		if(!bDodgeKeyHeld)
 		{
 			// Set Punching Variable
-			bIsPunching = true;
+			
 			// Rotate Character to Direction Pressed
 			SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, PunchAngle, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
-			//SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
-			// Create Array to Hold Overlapping Actors
-			TArray<AActor*> CollectedActors;
-			// If Punching With Left Hand
-			if (bIsLeftPunching)
+			if(!bIsHolding)
 			{
-				// Get All Actors That Overlap Sphere
-				LeftHandCollision->GetOverlappingActors(CollectedActors);
-				// Iterate Through All Actors In Array
-				for (int i = 0; i < CollectedActors.Num(); i++)
+				bIsPunching = true;
+				//SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
+				// Create Array to Hold Overlapping Actors
+				TArray<AActor*> CollectedActors;
+				// If Punching With Left Hand
+				if (bIsLeftPunching)
 				{
-					// Check If Actor is Self
-					if (CollectedActors[i] != this)
+					// Get All Actors That Overlap Sphere
+					LeftHandCollision->GetOverlappingActors(CollectedActors);
+					// Iterate Through All Actors In Array
+					for (int i = 0; i < CollectedActors.Num(); i++)
 					{
-						// Debug
-						GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
-						// Empty Array
-						CollectedActors.Empty();
-						// Stop Punching With Hand
-						bIsLeftPunching = false;
-						break;
+						// Check If Actor is Self
+						if (CollectedActors[i] != this)
+						{
+							// Debug
+							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
+							// Empty Array
+							CollectedActors.Empty();
+							// Stop Punching With Hand
+							bIsLeftPunching = false;
+							break;
+						}
 					}
 				}
-			}
-			// Else If Punching With Right Hand
-			else if (bIsRightPunching)
-			{
-				// Get All Actors That Overlap Sphere
-				RightHandCollision->GetOverlappingActors(CollectedActors);
-				// Iterate Through All Actors In Array
-				for (int i = 0; i < CollectedActors.Num(); i++)
+				// Else If Punching With Right Hand
+				else if (bIsRightPunching)
 				{
-					// Check If Actor is Self
-					if (CollectedActors[i] != this)
+					// Get All Actors That Overlap Sphere
+					RightHandCollision->GetOverlappingActors(CollectedActors);
+					// Iterate Through All Actors In Array
+					for (int i = 0; i < CollectedActors.Num(); i++)
 					{
-						// Debug 
-						GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Right Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
-						// Empty Array
-						CollectedActors.Empty();
-						// Stop Punching With Hand
-						bIsRightPunching = false;
-						break;
+						// Check If Actor is Self
+						if (CollectedActors[i] != this)
+						{
+							// Debug 
+							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Right Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
+							// Empty Array
+							CollectedActors.Empty();
+							// Stop Punching With Hand
+							bIsRightPunching = false;
+							break;
+						}
 					}
 				}
 			}

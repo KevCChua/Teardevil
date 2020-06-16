@@ -129,6 +129,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		bool bIsDodging;
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bIsHolding;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsLeftPunching;
     UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsRightPunching;
