@@ -105,6 +105,8 @@ public:
 		float PunchAngle;
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
         float DodgeAngle;
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+        float DodgeAngleAnim;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeDelay;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
@@ -114,7 +116,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        float AirDodgeSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeStopInterpMargin;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        float DodgeVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+    float AirDodgeVelocityModifier;
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickX;
@@ -124,9 +132,12 @@ public:
 	FVector CurrentLocation;
 	FVector DodgeLocation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        FVector DodgeVelocity;
+
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		bool bIsPunching;
-	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsDodging;
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsHolding;
@@ -139,6 +150,7 @@ public:
 	bool bDodgeLoop;
 	bool bSetActorX;
 	bool bSetActorY;
+	bool bDodgeInAir;
 
 	FTimerHandle DodgeTimerHandle;
 };
