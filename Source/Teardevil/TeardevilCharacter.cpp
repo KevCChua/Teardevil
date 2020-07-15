@@ -1,10 +1,14 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "TeardevilCharacter.h"
+
+#include "EnemyCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -216,8 +220,13 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 						{
 							// Debug
 							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
+							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
+							if(Enemy)
+							{
+								Enemy->Damaged(Damage);
+							}
 							// Empty Array
-							CollectedActors.Empty();
+							CollectedActors.Empty();							
 							// Stop Punching With Hand
 							bIsLeftPunching = false;
 							break;
@@ -237,6 +246,11 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 						{
 							// Debug 
 							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Right Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
+							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
+							if(Enemy)
+							{
+								Enemy->Damaged(Damage);
+							}
 							// Empty Array
 							CollectedActors.Empty();
 							// Stop Punching With Hand
@@ -278,9 +292,27 @@ void ATeardevilCharacter::DodgePressed()
 			// Get Normalized Directional Vector From Rotation
 			const FVector DodgeVector = FRotator(0.0f, RightStickAngle, 0.0f).Vector();
 			// Set Variable For Use In Animation Blueprints
-			DodgeAngle = PlayerRotation - RightStickAngle;
+			DodgeAngle = FMath::RadiansToDegrees(FMath::Atan2(RightStickY, RightStickX));
+			DodgeAngleAnim = PlayerRotation - RightStickAngle;
 			// Set Location To Go To
 			DodgeLocation = GetActorLocation() + DodgeVector * DodgeDistance;
+
+
+			//////////////////////////////////////////
+			FRotator newDirection = FRotator(0.0f, DodgeAngle, 0.0f);
+			FVector setVelocity = newDirection.Vector();
+			if (GetCharacterMovement()->IsFalling())
+			{
+				DodgeVelocity = setVelocity * AirDodgeVelocityModifier;
+				bDodgeInAir = true;
+			}
+
+			else
+				DodgeVelocity = setVelocity * DodgeVelocityModifier;
+			
+			//DodgeVelocity = setVelocity;
+			//////////////////////////////////////////
+			
 			// Set Timer
 			GetWorld()->GetTimerManager().SetTimer(DodgeTimerHandle, this, &ATeardevilCharacter::DodgeTimer, DodgeDelay, false);
 		}
@@ -293,60 +325,92 @@ void ATeardevilCharacter::DodgeReleased()
 	bDodgeKeyHeld = false;
 }
 
+
 void ATeardevilCharacter::DodgeMovement(float DeltaTime)
 {
-	// Movement Separated By X and Y 
-	// Check If Can Move In X Axis
-	if (bSetActorX)
+	if (bDodgeInAir)
 	{
-		//Set X Only
-		FVector X = DodgeLocation;
-		X.Y = CurrentLocation.Y;
-		X.Z = CurrentLocation.Z;
-		// Check If Close To Destination (Within Margin)
-		if (CurrentLocation.X  + DodgeStopInterpMargin >= X.X && CurrentLocation.X - DodgeStopInterpMargin <= X.X )
-		{
-			// Stop X Movement
-			bSetActorX = false;
-		}
-		else
-		{
-			// Set Location And Check if Blocked With Sweep
-			bSetActorX = SetActorLocation(FMath::VInterpTo(CurrentLocation, X, DeltaTime, DodgeSpeed), true);
-			// Reset Current Location In Case Y Also Moves
-			CurrentLocation = GetActorLocation();
-		}
+		GetCharacterMovement()->Velocity.X = FMath::FInterpTo(DodgeVelocity.X, 0.0f, DeltaTime, AirDodgeSpeed);
+		GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(DodgeVelocity.Y, 0.0f, DeltaTime, AirDodgeSpeed);
+		GetCharacterMovement()->Velocity.Z -= 9.8;
 	}
-	// Check If Can Move In Y Axis
-	if (bSetActorY)
+	else
 	{
-		// Set Y Only
-		FVector Y = DodgeLocation;
-		Y.X = CurrentLocation.X;
-		Y.Z = CurrentLocation.Z;
-		// Check If Close To Destination (Within Margin)
-		if (CurrentLocation.Y  + DodgeStopInterpMargin >= Y.Y && CurrentLocation.Y - DodgeStopInterpMargin <= Y.Y)
-		{
-			// Stop X Movement
-			bSetActorY = false;
-		}
-		else
-		{
-			// Set Location And Check if Blocked With Sweep
-			bSetActorY = SetActorLocation(FMath::VInterpTo(CurrentLocation, Y, DeltaTime, DodgeSpeed), true);
-		}
+		GetCharacterMovement()->Velocity.X = FMath::FInterpTo(DodgeVelocity.X, 0.0f, DeltaTime, DodgeSpeed);
+		GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(DodgeVelocity.Y, 0.0f, DeltaTime, DodgeSpeed);
 	}
 
-	// Check If Both Axis Can Move (Stop Dodge if False)
-	if(!bSetActorX && !bSetActorY)
-			bIsDodging = false;	
-
-	// Debug
-	GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Green, FString::Printf(TEXT("Actor Location: %s"), *CurrentLocation.ToString()));
-	GEngine->AddOnScreenDebugMessage(11, 5.f, FColor::Green, FString::Printf(TEXT("Dodge Location: %s"), *DodgeLocation.ToString()));
-	GEngine->AddOnScreenDebugMessage(12, 5.f, FColor::Green, FString::Printf(TEXT("bSetActorX: %s"), ( bSetActorX ? TEXT("true") : TEXT("false") )));
-	GEngine->AddOnScreenDebugMessage(13, 5.f, FColor::Green, FString::Printf(TEXT("bSetActorY: %s"), ( bSetActorY ? TEXT("true") : TEXT("false") )));
+	GEngine->AddOnScreenDebugMessage(11, 2.f, FColor::Red, FString::Printf(TEXT("Velocity X: %f"), GetCharacterMovement()->Velocity.X));
+	GEngine->AddOnScreenDebugMessage(12, 2.f, FColor::Green, FString::Printf(TEXT("Velocity Y: %f"), GetCharacterMovement()->Velocity.Y));
+	DodgeVelocity.X = GetCharacterMovement()->Velocity.X;
+	DodgeVelocity.Y = GetCharacterMovement()->Velocity.Y;
+	
+	float hypotenuse = FMath::Sqrt(FMath::Square(DodgeVelocity.X) + FMath::Square(DodgeVelocity.Y));
+	if (hypotenuse <= 200.0f)
+	{
+		bIsDodging = false;
+		bDodgeInAir = false;
+	}
+		
 }
+
+// void ATeardevilCharacter::DodgeMovement(float DeltaTime)
+// {
+// 	// Movement Separated By X and Y 
+// 	// Check If Can Move In X Axis
+// 	if (bSetActorX)
+// 	{
+// 		//Set X Only
+// 		FVector X = DodgeLocation;
+// 		X.Y = CurrentLocation.Y;
+// 		X.Z = CurrentLocation.Z;
+// 		// Check If Close To Destination (Within Margin)
+// 		if (CurrentLocation.X  + DodgeStopInterpMargin >= X.X && CurrentLocation.X - DodgeStopInterpMargin <= X.X )
+// 		{
+// 			// Stop X Movement
+// 			bSetActorX = false;
+// 		}
+// 		else
+// 		{
+// 			// Set Location And Check if Blocked With Sweep
+// 			//bSetActorX = SetActorLocation(FMath::VInterpTo(CurrentLocation, X, DeltaTime, DodgeSpeed), true);
+// 			
+// 			// Reset Current Location In Case Y Also Moves
+// 			CurrentLocation = GetActorLocation();
+//
+// 			//CharacterMovement->Velocity += 4*
+// 		}
+// 	}
+// 	// Check If Can Move In Y Axis
+// 	if (bSetActorY)
+// 	{
+// 		// Set Y Only
+// 		FVector Y = DodgeLocation;
+// 		Y.X = CurrentLocation.X;
+// 		Y.Z = CurrentLocation.Z;
+// 		// Check If Close To Destination (Within Margin)
+// 		if (CurrentLocation.Y  + DodgeStopInterpMargin >= Y.Y && CurrentLocation.Y - DodgeStopInterpMargin <= Y.Y)
+// 		{
+// 			// Stop X Movement
+// 			bSetActorY = false;
+// 		}
+// 		else
+// 		{
+// 			// Set Location And Check if Blocked With Sweep
+// 			//bSetActorY = SetActorLocation(FMath::VInterpTo(CurrentLocation, Y, DeltaTime, DodgeSpeed), true);
+// 		}
+// 	}
+//
+// 	// Check If Both Axis Can Move (Stop Dodge if False)
+// 	if(!bSetActorX && !bSetActorY)
+// 			bIsDodging = false;	
+//
+// 	// Debug
+// 	GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Green, FString::Printf(TEXT("Actor Location: %s"), *CurrentLocation.ToString()));
+// 	GEngine->AddOnScreenDebugMessage(11, 5.f, FColor::Green, FString::Printf(TEXT("Dodge Location: %s"), *DodgeLocation.ToString()));
+// 	GEngine->AddOnScreenDebugMessage(12, 5.f, FColor::Green, FString::Printf(TEXT("bSetActorX: %s"), ( bSetActorX ? TEXT("true") : TEXT("false") )));
+// 	GEngine->AddOnScreenDebugMessage(13, 5.f, FColor::Green, FString::Printf(TEXT("bSetActorY: %s"), ( bSetActorY ? TEXT("true") : TEXT("false") )));
+// }
 
 void ATeardevilCharacter::DodgeTimer()
 {
