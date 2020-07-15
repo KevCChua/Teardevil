@@ -1,6 +1,8 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "TeardevilCharacter.h"
+
+#include "EnemyCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "TimerManager.h"
 #include "Camera/CameraComponent.h"
@@ -218,8 +220,13 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 						{
 							// Debug
 							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
+							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
+							if(Enemy)
+							{
+								Enemy->Damaged(Damage);
+							}
 							// Empty Array
-							CollectedActors.Empty();
+							CollectedActors.Empty();							
 							// Stop Punching With Hand
 							bIsLeftPunching = false;
 							break;
@@ -239,6 +246,11 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 						{
 							// Debug 
 							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Right Punched Actor Name: %s"), *CollectedActors[i]->GetName()));
+							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
+							if(Enemy)
+							{
+								Enemy->Damaged(Damage);
+							}
 							// Empty Array
 							CollectedActors.Empty();
 							// Stop Punching With Hand
@@ -328,8 +340,8 @@ void ATeardevilCharacter::DodgeMovement(float DeltaTime)
 		GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(DodgeVelocity.Y, 0.0f, DeltaTime, DodgeSpeed);
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Velocity X: %f"), GetCharacterMovement()->Velocity.X));
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Velocity Y: %f"), GetCharacterMovement()->Velocity.Y));
+	GEngine->AddOnScreenDebugMessage(11, 2.f, FColor::Red, FString::Printf(TEXT("Velocity X: %f"), GetCharacterMovement()->Velocity.X));
+	GEngine->AddOnScreenDebugMessage(12, 2.f, FColor::Green, FString::Printf(TEXT("Velocity Y: %f"), GetCharacterMovement()->Velocity.Y));
 	DodgeVelocity.X = GetCharacterMovement()->Velocity.X;
 	DodgeVelocity.Y = GetCharacterMovement()->Velocity.Y;
 	

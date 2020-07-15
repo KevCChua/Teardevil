@@ -122,13 +122,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         float DodgeVelocityModifier;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
-    float AirDodgeVelocityModifier;
+		float AirDodgeVelocityModifier;
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickX;
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickY;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		int Damage;
+	
 	FVector CurrentLocation;
 	FVector DodgeLocation;
 
