@@ -27,8 +27,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Functions
-	void Damaged(int Value);
-	void DestroyEnemy();
+	void Damaged(int Value, FVector Location);
+	void DestroyEnemy(FVector Location);
 	
 	
 	// Variables
@@ -36,6 +36,10 @@ public:
 		int Health;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		int Damage;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float ImpactForce;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        float ImpactRadius;
 	
 };
