@@ -191,7 +191,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 	if (X != 0.0f || Y != 0.0f)
 	{
 		// Check If Dodge Key Is Held Down
-		if(!bDodgeKeyHeld)
+		if(!bDodgeKeyHeld && !bIsHolding)
 		{
 			// Set Punching Variable
 			bIsPunching = true;
@@ -262,7 +262,7 @@ void ATeardevilCharacter::DodgePressed()
 	if (RightStickX != 0.0f || RightStickY != 0.0f)
 	{
 		// Since DodgePressed Is Called Every Frame Key is Held, Check If Executed Before 
-		if (!bDodgeLoop)
+		if (!bDodgeLoop && !bIsHolding)
 		{
 			// Set So Only Executes Once
 			bDodgeLoop = true;
