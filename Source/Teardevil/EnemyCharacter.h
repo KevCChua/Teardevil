@@ -29,6 +29,8 @@ public:
 	// Functions
 	void Damaged(int Value, FVector Location);
 	void DestroyEnemy(FVector Location);
+	UFUNCTION(BlueprintImplementableEvent)
+	void StopAIBehaviour();
 	
 	
 	// Variables

@@ -50,8 +50,7 @@ void AEnemyCharacter::DestroyEnemy(FVector Location)
 	this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	this->GetMesh()->SetSimulatePhysics(true);
-	//this->GetMesh()->AddImpulse(ImpactForce * Location);
 	this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
-	//this->Destroy();
+	StopAIBehaviour();
 }
 
