@@ -108,6 +108,8 @@ public:
 		float PunchAngle;
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
         float DodgeAngle;
+	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+        float DodgeAngleAnim;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeDelay;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
@@ -117,30 +119,49 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        float AirDodgeSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float DodgeStopInterpMargin;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        float DodgeVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float AirDodgeVelocityModifier;
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickX;
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickY;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		int Damage;
+	
 	FVector CurrentLocation;
 	FVector DodgeLocation;
 
-	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+        FVector DodgeVelocity;
+
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;
-	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsDodging;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bIsHolding;
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsLeftPunching;
     UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsRightPunching;
-	
-	bool bDodgeKeyHeld;
+
+	UPROPERTY(BlueprintReadOnly)
+		bool bDodgeKeyHeld;
 	bool bDodgeLoop;
 	bool bSetActorX;
 	bool bSetActorY;
+	bool bDodgeInAir;
 
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+        TSubclassOf<class AActor> Onomatopoeia;
+	
 	FTimerHandle DodgeTimerHandle;
 };
 
