@@ -3,8 +3,6 @@
 
 #include "EnemyCharacter.h"
 
-#include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
 
 // Sets default values
@@ -36,21 +34,17 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
-void AEnemyCharacter::Damaged(int Value, FVector Location)
+void AEnemyCharacter::Damaged(int Value)
 {
 	Health -= Value;
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
 	if(Health <= 0)
-		DestroyEnemy(Location);
+		DestroyEnemy();
 }
 
-void AEnemyCharacter::DestroyEnemy(FVector Location)
+void AEnemyCharacter::DestroyEnemy()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
-	this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	this->GetMesh()->SetSimulatePhysics(true);
-	this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
-	StopAIBehaviour();
+	this->Destroy();
 }
 
