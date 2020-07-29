@@ -179,12 +179,16 @@ void ATeardevilCharacter::RightStickForward(float Value)
 {
 	// Set Value
 	RightStickY = Value;
+	//if(Value != 0.0f && !bDodgeKeyHeld && bIsHolding)
+	//	bIsPunching = true;
 }
 
 void ATeardevilCharacter::RightStickRight(float Value)
 {
 	// Set Value
 	RightStickX = Value;
+	//if(Value != 0.0f && !bDodgeKeyHeld && bIsHolding)
+	//	bIsPunching = true;
 }
 
 void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
@@ -192,17 +196,17 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 	// Get Angle Of Right Stick
 	PunchAngle = FMath::RadiansToDegrees(FMath::Atan2(Y, X));
 	// Check if Right Stick Pressed
-	if (X != 0.0f || Y != 0.0f)
+	if (X != 0.0f || Y != 0.0f || bIsLeftPunching || bIsRightPunching)
 	{
 		// Check If Dodge Key Is Held Down
 		if(!bDodgeKeyHeld && !bIsHolding)
 		{
-			// Set Punching Variable
-			
 			// Rotate Character to Direction Pressed
-			SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, PunchAngle, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
+			if(!bIsDodging)
+				SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, X!=0||Y!=0 ? PunchAngle : GetActorRotation().Yaw, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
 			if(!bIsHolding)
 			{
+				// Set Punching Variable
 				bIsPunching = true;
 				//SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
 				// Create Array to Hold Overlapping Actors
@@ -223,7 +227,8 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 							if(Enemy)
 							{
-								Enemy->Damaged(Damage);
+								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation());
+								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 							}
 							// Empty Array
 							CollectedActors.Empty();							
@@ -232,6 +237,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							break;
 						}
 					}
+					bIsPunching = false;
 				}
 				// Else If Punching With Right Hand
 				else if (bIsRightPunching)
@@ -249,7 +255,8 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 							if(Enemy)
 							{
-								Enemy->Damaged(Damage);
+								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation());
+								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 							}
 							// Empty Array
 							CollectedActors.Empty();
@@ -258,6 +265,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							break;
 						}
 					}
+					bIsPunching = false;
 				}
 			}
 		}
@@ -267,9 +275,9 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 			DodgePressed();
 		}
 	}
-	else
+	//else
 		// Set Punching Variable
-		bIsPunching = false;
+		//bIsPunching = false;
 }
 
 void ATeardevilCharacter::DodgePressed()

@@ -138,7 +138,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         FVector DodgeVelocity;
 
-	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsDodging;
@@ -148,13 +148,17 @@ public:
     	bool bIsLeftPunching;
     UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsRightPunching;
-	
-	bool bDodgeKeyHeld;
+
+	UPROPERTY(BlueprintReadOnly)
+		bool bDodgeKeyHeld;
 	bool bDodgeLoop;
 	bool bSetActorX;
 	bool bSetActorY;
 	bool bDodgeInAir;
 
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+        TSubclassOf<class AActor> Onomatopoeia;
+	
 	FTimerHandle DodgeTimerHandle;
 };
 
