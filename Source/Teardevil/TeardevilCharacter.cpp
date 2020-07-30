@@ -199,13 +199,12 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 	if (X != 0.0f || Y != 0.0f || bIsLeftPunching || bIsRightPunching)
 	{
 		// Check If Dodge Key Is Held Down
-		if(!bDodgeKeyHeld && !bIsHolding)
+		if(!bDodgeKeyHeld)
 		{
-			// Rotate Character to Direction Pressed
-			if(!bIsDodging)
-				SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, X!=0||Y!=0 ? PunchAngle : GetActorRotation().Yaw, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
-			if(!bIsHolding)
+			if(!bIsHolding && !bIsDodging)
 			{
+				// Rotate Character to Direction Pressed
+				SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, X != 0 || Y != 0 ? PunchAngle : GetActorRotation().Yaw, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
 				// Set Punching Variable
 				bIsPunching = true;
 				//SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
@@ -288,7 +287,7 @@ void ATeardevilCharacter::DodgePressed()
 	if (RightStickX != 0.0f || RightStickY != 0.0f)
 	{
 		// Since DodgePressed Is Called Every Frame Key is Held, Check If Executed Before 
-		if (!bDodgeLoop && !bIsHolding)
+		if (!bDodgeLoop)
 		{
 			// Set So Only Executes Once
 			bDodgeLoop = true;
