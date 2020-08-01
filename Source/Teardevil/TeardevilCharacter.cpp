@@ -228,12 +228,12 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							{
 								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation());
 								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+								// Empty Array
+								CollectedActors.Empty();							
+								// Stop Punching With Hand
+								bIsLeftPunching = false;
+								break;
 							}
-							// Empty Array
-							CollectedActors.Empty();							
-							// Stop Punching With Hand
-							bIsLeftPunching = false;
-							break;
 						}
 					}
 					bIsPunching = false;
@@ -256,12 +256,12 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							{
 								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation());
 								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+								// Empty Array
+								CollectedActors.Empty();
+								// Stop Punching With Hand
+								bIsRightPunching = false;
+								break;
 							}
-							// Empty Array
-							CollectedActors.Empty();
-							// Stop Punching With Hand
-							bIsRightPunching = false;
-							break;
 						}
 					}
 					bIsPunching = false;
