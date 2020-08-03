@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <openexr/Deploy/include/ImfArray.h>
+
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
@@ -52,6 +54,15 @@ protected:
 
 	// Logic for Punch
 	void Punch(float X, float Y, float DeltaTime);
+
+	// Logic for Attacks
+	void Attack();
+
+	// Check Collision On Limbs
+	void AttackCollision();
+
+	// Logic for Animations
+	void PlayAnimations();
 	
 	// Called When Key Pressed
 	void DodgePressed();
@@ -99,6 +110,8 @@ public:
 		USphereComponent* LeftHandCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USphereComponent* RightHandCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* RightFootCollision;
 	
 	// Global Variables
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
@@ -123,6 +136,9 @@ public:
         float DodgeVelocityModifier;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float AirDodgeVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float AnimPlayRate;
+	
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickX;
@@ -130,7 +146,15 @@ public:
 		float RightStickY;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DeadZone;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<int> DirectionArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		int Damage;
+
+	int AttackCtr;
 	
 	FVector CurrentLocation;
 	FVector DodgeLocation;
@@ -148,6 +172,11 @@ public:
     	bool bIsLeftPunching;
     UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsRightPunching;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bIsAttacking;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bNextAttack;
+	
 
 	UPROPERTY(BlueprintReadOnly)
 		bool bDodgeKeyHeld;
@@ -158,6 +187,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
         TSubclassOf<class AActor> Onomatopoeia;
+	
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+		UAnimSequenceBase* AnimFirstAttack;
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+		UAnimSequenceBase* AnimSecondAttack;
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+		UAnimSequenceBase* AnimThirdAttack;
 	
 	FTimerHandle DodgeTimerHandle;
 };
