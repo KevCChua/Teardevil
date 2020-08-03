@@ -8,6 +8,7 @@
 #include "EnemyCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "TimerManager.h"
+#include "../../../../../../../Program Files/Epic Games/UE_4.23/Engine/Shaders/Private/ScreenSpaceDenoise/SSDSignalArray.ush"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -407,6 +408,7 @@ void ATeardevilCharacter::Attack()
 		else
 		{
 			DirectionArray.Empty();
+			AttackCtr = 0;
 			DodgePressed();
 		}
 	}
@@ -424,7 +426,7 @@ void ATeardevilCharacter::Attack()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Single Punch")));
 			//if(!this->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
-			PlayAnimations();
+			PlayAnimations(DirectionArray.Top());
 		}
 		//else
 		//	DirectionArray.Empty();
@@ -470,10 +472,12 @@ void ATeardevilCharacter::Attack()
 void ATeardevilCharacter::AttackCollision()
 {
 	TArray<AActor*> CollectedActors;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("ActorHit: %d"), AttackCtr));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Attack Counter: %d"), AttackCtr));
 	USphereComponent* ActiveComponent = nullptr;
-	switch (AttackCtr)
+	if(TransitionDir == 0)
 	{
+		switch (AttackCtr)
+		{
 		case 0:
 			RightFootCollision->GetOverlappingActors(CollectedActors);
 			ActiveComponent = RightFootCollision;
@@ -488,8 +492,31 @@ void ATeardevilCharacter::AttackCollision()
 			break;
 		default:
 			break;
+		}
+	}
+	else
+	{
+		switch (TransitionDir)
+		{
+			case 1:
+				RightHandCollision->GetOverlappingActors(CollectedActors);
+				ActiveComponent = RightHandCollision;
+				break;
+			case 2:
+				LeftHandCollision->GetOverlappingActors(CollectedActors);
+				ActiveComponent = LeftHandCollision;
+				break;
+			case 3:
+				RightFootCollision->GetOverlappingActors(CollectedActors);
+				ActiveComponent = RightFootCollision;
+				break;
+			default:
+				break;
+		}
 	}
 
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Active Component: %s"), *ActiveComponent->GetName()));
+	
 	// Iterate Through All Actors In Array
 	for (int i = 0; i < CollectedActors.Num(); i++)
 	{
@@ -512,12 +539,53 @@ void ATeardevilCharacter::AttackCollision()
 	}
 }
 
-void ATeardevilCharacter::PlayAnimations()
+void ATeardevilCharacter::AttackMovement(float DeltaTime)
+{
+	switch (LastAttackDir)
+	{
+	case 0:
+		AttackMoveLocation.Y -= AttackTravelDistance;
+		break;
+	case 1:
+		AttackMoveLocation.X += AttackTravelDistance / 1.41421;
+		AttackMoveLocation.Y -= AttackTravelDistance / 1.41421;
+		break;
+	case 2:
+		AttackMoveLocation.X += AttackTravelDistance;
+		break;
+	case 3:
+		AttackMoveLocation.X += AttackTravelDistance / 1.41421;
+		AttackMoveLocation.Y += AttackTravelDistance / 1.41421;
+		break;
+	case 4:
+		AttackMoveLocation.Y += AttackTravelDistance;
+		break;
+	case 5:
+		AttackMoveLocation.X -= AttackTravelDistance / 1.41421;
+		AttackMoveLocation.Y += AttackTravelDistance / 1.41421;
+		break;
+	case 6:
+		AttackMoveLocation.X -= AttackTravelDistance;
+		break;
+	case 7:
+		AttackMoveLocation.X -= AttackTravelDistance / 1.41421;
+		AttackMoveLocation.Y -= AttackTravelDistance / 1.41421;
+		break;
+	default:
+		break;
+	}
+	SetActorLocation(FMath::Lerp(GetActorLocation(),AttackMoveLocation, DeltaTime * 2), true);
+}
+
+void ATeardevilCharacter::PlayAnimations(int Dir)
 {
 	bNextAttack = false;
-	this->GetMesh()->GetAnimInstance()->StopAllMontages(0);
-	switch(AttackCtr)
+	//this->GetMesh()->GetAnimInstance()->StopAllMontages(0);
+	if(AttackCtr == 0 || (Dir <= LastAttackDir + 1 && Dir >= LastAttackDir - 1) || (Dir == 7 && LastAttackDir == 0) || (Dir == 0 && LastAttackDir == 7))
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Plus or Minus One")));
+		switch(AttackCtr)
+		{
 		case 0:
 			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimFirstAttack, "UpperBody", 0.25f, 0.25f, AnimPlayRate);
 			break;
@@ -529,11 +597,37 @@ void ATeardevilCharacter::PlayAnimations()
 			break;
 		default:
 			break;
+		}
+		if(AttackCtr >= 2)
+			AttackCtr = 0;
+		else
+			AttackCtr++;
+		
+		TransitionDir = 0;
 	}
-	if(AttackCtr >= 2)
+	else if(Dir == LastAttackDir - 2 || (Dir == 7 && LastAttackDir == 1) || (Dir == 6 && LastAttackDir == 0))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Transition")));
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(LeftTransitionAttack, "UpperBody", 0.25f, 0.25f, LeftTransitionPlayRate);
 		AttackCtr = 0;
+		TransitionDir = 1;
+	}
+	else if (Dir == LastAttackDir + 2 || (Dir == 0 && LastAttackDir == 6) || (Dir == 1 && LastAttackDir == 7))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Right Transition")));
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(RightTransitionAttack, "UpperBody", 0.25f, 0.25f, RightTransitionPlayRate);
+		AttackCtr = 0;
+		TransitionDir = 2;
+	}
 	else
-		AttackCtr++;
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back Transition")));
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(BackTransitionAttack, "UpperBody", 0.25f, 0.25f, BackTransitionPlayRate);
+		AttackCtr = 0;
+		TransitionDir = 3;
+	}
+	
+	LastAttackDir = Dir;
 }
 
 void ATeardevilCharacter::DodgePressed()
