@@ -8,7 +8,6 @@
 #include "EnemyCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "TimerManager.h"
-#include "../../../../../../../Program Files/Epic Games/UE_4.23/Engine/Shaders/Private/ScreenSpaceDenoise/SSDSignalArray.ush"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -131,8 +130,29 @@ void ATeardevilCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ATeardevilCharacter::OnResetVR);
+
+
 }
 
+
+void ATeardevilCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void ATeardevilCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if(bIsAttacking)
+	{
+		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
+		if(Enemy)
+		{
+			bCollideDuringAnim = true;
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit: %s"), *OtherActor->GetName()));
+		}
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit: %s"), *OtherActor->GetName()));
+}
 
 void ATeardevilCharacter::OnResetVR()
 {
@@ -165,7 +185,7 @@ void ATeardevilCharacter::LookUpAtRate(float Rate)
 void ATeardevilCharacter::MoveForward(float Value)
 {
 	// Checks If Controlled, Has Value, And If In Dodge
-	if ((Controller != NULL) && (Value != 0.0f) && !bIsDodging && !bIsAttacking)
+	if ((Controller != NULL) && (Value != 0.0f) && !bIsDodging && !GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 	{
 		// Set Rotation For Movement (Constant Since Camera Doesnt Rotate)
 		const FRotator YawRotation(0, -90, 0);
@@ -179,7 +199,7 @@ void ATeardevilCharacter::MoveForward(float Value)
 void ATeardevilCharacter::MoveRight(float Value)
 {
 	// Checks If Controlled, Has Value, And If In Dodge
-	if ( (Controller != NULL) && (Value != 0.0f) && !bIsDodging && !bIsAttacking)
+	if ( (Controller != NULL) && (Value != 0.0f) && !bIsDodging && !GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 	{
 		// Set Rotation For Movement (Constant Since Camera Doesnt Rotate)
 		const FRotator YawRotation(0, -90, 0);
@@ -241,7 +261,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 							if(Enemy)
 							{
-								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation());
+								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation(), GetActorLocation());
 								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 								// Empty Array
 								CollectedActors.Empty();							
@@ -269,7 +289,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 							if(Enemy)
 							{
-								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation());
+								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation(), GetActorLocation());
 								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 								// Empty Array
 								CollectedActors.Empty();
@@ -418,10 +438,10 @@ void ATeardevilCharacter::Attack()
 		int NumInArray = DirectionArray.Num();
 		if(NumInArray >= 6)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Full Circle")));
-		else if(NumInArray >= 4)
+		/*else if(NumInArray >= 4)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Half Circle")));
 		else if(NumInArray >= 3)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Quarter Circle")));
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Quarter Circle")));*/
 		else if(NumInArray >= 1)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Single Punch")));
@@ -515,7 +535,7 @@ void ATeardevilCharacter::AttackCollision()
 		}
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Active Component: %s"), *ActiveComponent->GetName()));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Active Component: %s"), *ActiveComponent->GetName()));
 	
 	// Iterate Through All Actors In Array
 	for (int i = 0; i < CollectedActors.Num(); i++)
@@ -528,7 +548,7 @@ void ATeardevilCharacter::AttackCollision()
 			AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 			if(Enemy)
 			{
-				Enemy->Damaged(Damage, ActiveComponent->GetComponentLocation());
+				Enemy->Damaged(Damage, ActiveComponent->GetComponentLocation(), GetActorLocation());
 				GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 				// Empty Array
 				CollectedActors.Empty();
@@ -541,40 +561,29 @@ void ATeardevilCharacter::AttackCollision()
 
 void ATeardevilCharacter::AttackMovement(float DeltaTime)
 {
-	switch (LastAttackDir)
+	/*TArray<AActor*> CollectedActors;
+
+	for (int i = 0; i < CollectedActors.Num(); i++)
 	{
-	case 0:
-		AttackMoveLocation.Y -= AttackTravelDistance;
-		break;
-	case 1:
-		AttackMoveLocation.X += AttackTravelDistance / 1.41421;
-		AttackMoveLocation.Y -= AttackTravelDistance / 1.41421;
-		break;
-	case 2:
-		AttackMoveLocation.X += AttackTravelDistance;
-		break;
-	case 3:
-		AttackMoveLocation.X += AttackTravelDistance / 1.41421;
-		AttackMoveLocation.Y += AttackTravelDistance / 1.41421;
-		break;
-	case 4:
-		AttackMoveLocation.Y += AttackTravelDistance;
-		break;
-	case 5:
-		AttackMoveLocation.X -= AttackTravelDistance / 1.41421;
-		AttackMoveLocation.Y += AttackTravelDistance / 1.41421;
-		break;
-	case 6:
-		AttackMoveLocation.X -= AttackTravelDistance;
-		break;
-	case 7:
-		AttackMoveLocation.X -= AttackTravelDistance / 1.41421;
-		AttackMoveLocation.Y -= AttackTravelDistance / 1.41421;
-		break;
-	default:
-		break;
+		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
+		if(Enemy)
+		{
+			Collided = true;
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, FString::Printf(TEXT("Collide")));
+			break;
+		}
+	}*/
+	if(!bCollideDuringAnim)
+	{
+		GetCharacterMovement()->Velocity.X = FMath::FInterpTo(AttackVelocity.X, 0.0f, DeltaTime, AttackTravelSpeed);
+		GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(AttackVelocity.Y, 0.0f, DeltaTime, AttackTravelSpeed);
+		AttackVelocity = GetCharacterMovement()->Velocity;
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Velocity: %s"), *AttackVelocity.ToString()));
 	}
-	SetActorLocation(FMath::Lerp(GetActorLocation(),AttackMoveLocation, DeltaTime * 2), true);
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Stop Moving")));
+	}
 }
 
 void ATeardevilCharacter::PlayAnimations(int Dir)
@@ -583,17 +592,23 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 	//this->GetMesh()->GetAnimInstance()->StopAllMontages(0);
 	if(AttackCtr == 0 || (Dir <= LastAttackDir + 1 && Dir >= LastAttackDir - 1) || (Dir == 7 && LastAttackDir == 0) || (Dir == 0 && LastAttackDir == 7))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Plus or Minus One")));
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Plus or Minus One")));
 		switch(AttackCtr)
 		{
 		case 0:
 			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimFirstAttack, "UpperBody", 0.25f, 0.25f, AnimPlayRate);
+			// Set Timer
+			GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &ATeardevilCharacter::AttackTimer, ComboDelay + (AnimFirstAttack->SequenceLength / AnimPlayRate), false);
 			break;
 		case 1:
 			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimSecondAttack, "UpperBody", 0.25f, 0.25f, AnimPlayRate);
+			// Set Timer
+			GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &ATeardevilCharacter::AttackTimer, ComboDelay+ (AnimSecondAttack->SequenceLength / AnimPlayRate), false);
 			break;
 		case 2:
 			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimThirdAttack, "UpperBody");
+			// Clear Timer
+			GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 			break;
 		default:
 			break;
@@ -611,6 +626,7 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(LeftTransitionAttack, "UpperBody", 0.25f, 0.25f, LeftTransitionPlayRate);
 		AttackCtr = 0;
 		TransitionDir = 1;
+		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 	}
 	else if (Dir == LastAttackDir + 2 || (Dir == 0 && LastAttackDir == 6) || (Dir == 1 && LastAttackDir == 7))
 	{
@@ -618,6 +634,7 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(RightTransitionAttack, "UpperBody", 0.25f, 0.25f, RightTransitionPlayRate);
 		AttackCtr = 0;
 		TransitionDir = 2;
+		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 	}
 	else
 	{
@@ -625,9 +642,54 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(BackTransitionAttack, "UpperBody", 0.25f, 0.25f, BackTransitionPlayRate);
 		AttackCtr = 0;
 		TransitionDir = 3;
+		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 	}
 	
 	LastAttackDir = Dir;
+
+
+	switch (Dir)
+	{
+		case 0:
+			AttackDir = -90;
+			break;
+		case 1:
+			AttackDir = -45;
+			break;
+		case 2:
+			AttackDir = 0;
+			break;
+		case 3:
+			AttackDir = 45;
+			break;
+		case 4:
+			AttackDir = 90;
+			break;
+		case 5:
+			AttackDir = 135;
+			break;
+		case 6:
+			AttackDir = 180;
+			break;
+		case 7:
+			AttackDir = -135;
+			break;
+		default:
+			break;
+	}
+	//FVector setVelocity = ;
+	AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Attack Velocity: %s"), *AttackVelocity.ToString()));
+}
+
+void ATeardevilCharacter::AttackTimer()
+{
+	AttackCtr = 0;
+	TransitionDir = 0;
+	bNextAttack = true;
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Combo Ended")));
+	// Clear Timer
+	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 }
 
 void ATeardevilCharacter::DodgePressed()

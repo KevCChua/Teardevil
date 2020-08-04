@@ -38,6 +38,12 @@ public:
 
 protected:
 
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
 
@@ -68,6 +74,9 @@ protected:
 
 	// Logic for Animations
 	void PlayAnimations(int Dir);
+
+	// Timer for Attack Animations
+	void AttackTimer();
 	
 	// Called When Key Pressed
 	void DodgePressed();
@@ -150,7 +159,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 		float BackTransitionPlayRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
-		float AttackTravelDistance;
+		float AttackVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AttackTravelSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float ComboDelay;
+
+	float AttackDir;
 	
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
@@ -176,9 +191,11 @@ public:
 	
 	FVector CurrentLocation;
 	FVector DodgeLocation;
+	FVector AttackVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         FVector DodgeVelocity;
+
 
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;
@@ -194,7 +211,8 @@ public:
 		bool bIsAttacking;
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bNextAttack;
-	
+	UPROPERTY(BlueprintReadWrite)
+		bool bCollideDuringAnim;
 
 	UPROPERTY(BlueprintReadOnly)
 		bool bDodgeKeyHeld;
@@ -202,6 +220,7 @@ public:
 	bool bSetActorX;
 	bool bSetActorY;
 	bool bDodgeInAir;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
         TSubclassOf<class AActor> Onomatopoeia;
@@ -220,5 +239,8 @@ public:
 		UAnimSequenceBase* BackTransitionAttack;
 	
 	FTimerHandle DodgeTimerHandle;
+
+	UPROPERTY(BlueprintReadWrite)
+		FTimerHandle AttackTimerHandle;
 };
 

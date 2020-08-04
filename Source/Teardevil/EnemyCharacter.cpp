@@ -36,12 +36,16 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
-void AEnemyCharacter::Damaged(int Value, FVector Location)
+void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector ActorLocation)
 {
 	Health -= Value;
+	FVector KnockBackDirection = FVector(GetActorLocation().X - ActorLocation.X, GetActorLocation().Y - ActorLocation.Y, 0.0f);
+	KnockBackDirection.Normalize();
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
 	if(Health <= 0)
-		DestroyEnemy(Location);
+		DestroyEnemy(ComponentLocation);
+	else
+		SetActorLocation(GetActorLocation() + KnockBackDirection * 100);
 }
 
 void AEnemyCharacter::DestroyEnemy(FVector Location)

@@ -27,7 +27,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Functions
-	void Damaged(int Value, FVector Location);
+	void Damaged(int Value, FVector Location, FVector ActorLocation);
 	void DestroyEnemy(FVector Location);
 	UFUNCTION(BlueprintImplementableEvent)
 	void StopAIBehaviour();
