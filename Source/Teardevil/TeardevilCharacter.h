@@ -75,6 +75,9 @@ protected:
 	// Logic for Animations
 	void PlayAnimations(int Dir);
 
+	// Check Closest Enemy
+	void TargetEnemy();
+
 	// Timer for Attack Animations
 	void AttackTimer();
 	
@@ -164,6 +167,12 @@ public:
 		float AttackTravelSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 		float ComboDelay;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float SnapToDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float OffsetDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float RotateSpeed;
 
 	float AttackDir;
 	
@@ -192,10 +201,12 @@ public:
 	FVector CurrentLocation;
 	FVector DodgeLocation;
 	FVector AttackVelocity;
+	FVector AttackOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         FVector DodgeVelocity;
 
+	FRotator AttackRotation;
 
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;

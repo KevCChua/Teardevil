@@ -43,5 +43,7 @@ public:
 		float ImpactForce;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         float ImpactRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float KnockBackDistance;
 	
 };

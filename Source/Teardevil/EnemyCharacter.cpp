@@ -41,20 +41,21 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	Health -= Value;
 	FVector KnockBackDirection = FVector(GetActorLocation().X - ActorLocation.X, GetActorLocation().Y - ActorLocation.Y, 0.0f);
 	KnockBackDirection.Normalize();
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
 	if(Health <= 0)
 		DestroyEnemy(ComponentLocation);
 	else
-		SetActorLocation(GetActorLocation() + KnockBackDirection * 100);
+		SetActorLocation(GetActorLocation() + KnockBackDirection * KnockBackDistance);
 }
 
 void AEnemyCharacter::DestroyEnemy(FVector Location)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
 	this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	this->GetMesh()->SetSimulatePhysics(true);
 	this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
 	StopAIBehaviour();
+	Tags.Add("Dead");
 }
 

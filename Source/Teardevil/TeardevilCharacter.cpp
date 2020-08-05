@@ -17,6 +17,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATeardevilCharacter
@@ -77,6 +78,8 @@ ATeardevilCharacter::ATeardevilCharacter()
 	bIsRightPunching = false;
 
 	bNextAttack = true;
+
+	AttackOffset = FVector(0,0,0);
 }
 
 void ATeardevilCharacter::Tick(float DeltaTime)
@@ -142,15 +145,15 @@ void ATeardevilCharacter::BeginPlay()
 
 void ATeardevilCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if(bIsAttacking)
-	{
+	//if(bIsAttacking)
+	//{
 		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
 		if(Enemy)
 		{
 			bCollideDuringAnim = true;
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit: %s"), *OtherActor->GetName()));
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Collide: %s"), *OtherActor->GetName()));
 		}
-	}
+	//}
 	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit: %s"), *OtherActor->GetName()));
 }
 
@@ -451,7 +454,7 @@ void ATeardevilCharacter::Attack()
 		//else
 		//	DirectionArray.Empty();
 
-		if(DirectionArray.Num() != 0)
+		/*if(DirectionArray.Num() != 0)
 		{
 			int LastIndex = DirectionArray.Top();
 			switch (LastIndex)
@@ -484,7 +487,7 @@ void ATeardevilCharacter::Attack()
 			default:
 				break;
 			}
-		}
+		}*/
 		DirectionArray.Empty();
 	}
 }
@@ -561,18 +564,6 @@ void ATeardevilCharacter::AttackCollision()
 
 void ATeardevilCharacter::AttackMovement(float DeltaTime)
 {
-	/*TArray<AActor*> CollectedActors;
-
-	for (int i = 0; i < CollectedActors.Num(); i++)
-	{
-		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
-		if(Enemy)
-		{
-			Collided = true;
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, FString::Printf(TEXT("Collide")));
-			break;
-		}
-	}*/
 	if(!bCollideDuringAnim)
 	{
 		GetCharacterMovement()->Velocity.X = FMath::FInterpTo(AttackVelocity.X, 0.0f, DeltaTime, AttackTravelSpeed);
@@ -582,8 +573,9 @@ void ATeardevilCharacter::AttackMovement(float DeltaTime)
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Stop Moving")));
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("Stop Moving")));
 	}
+	SetActorRotation(FMath::Lerp(GetActorRotation(), AttackRotation, DeltaTime * RotateSpeed));
 }
 
 void ATeardevilCharacter::PlayAnimations(int Dir)
@@ -651,35 +643,85 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 	switch (Dir)
 	{
 		case 0:
+			AttackOffset = FVector(0, -OffsetDistance, 0);
 			AttackDir = -90;
 			break;
 		case 1:
+			AttackOffset = FVector(OffsetDistance / 1.41421f,-OffsetDistance / 1.41421f,0);
 			AttackDir = -45;
 			break;
 		case 2:
+			AttackOffset = FVector(OffsetDistance, 0, 0);
 			AttackDir = 0;
 			break;
 		case 3:
+			AttackOffset = FVector(OffsetDistance / 1.41421f,OffsetDistance / 1.41421f,0);
 			AttackDir = 45;
 			break;
 		case 4:
+			AttackOffset = FVector(0, OffsetDistance, 0);
 			AttackDir = 90;
 			break;
 		case 5:
+			AttackOffset = FVector(-OffsetDistance / 1.41421f,OffsetDistance / 1.41421f,0);
 			AttackDir = 135;
 			break;
 		case 6:
+			AttackOffset = FVector(-OffsetDistance, 0, 0);
 			AttackDir = 180;
 			break;
 		case 7:
+			AttackOffset = FVector(-OffsetDistance / 1.41421f,-OffsetDistance / 1.41421f,0);
 			AttackDir = -135;
 			break;
 		default:
+			AttackOffset = FVector(0,0,0);
 			break;
 	}
 	//FVector setVelocity = ;
 	AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+	TargetEnemy();
 	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Attack Velocity: %s"), *AttackVelocity.ToString()));
+}
+
+void ATeardevilCharacter::TargetEnemy()
+{
+	TArray<AActor*> CollectedActors;
+	AActor* ClosestActor = nullptr;
+	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), CollectedActors);
+
+	for (int i = 0; i < CollectedActors.Num(); i++)
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Collected Actors: %s"), *CollectedActors[i]->GetName()));
+		if(ClosestActor == nullptr && !CollectedActors[i]->Tags.Contains("Dead"))
+			ClosestActor = CollectedActors[i];
+		else
+		{
+			// Check If Distance is Greater
+			if(!CollectedActors[i]->Tags.Contains("Dead") && ((GetActorLocation() + AttackOffset - ClosestActor->GetActorLocation()).Size() > (GetActorLocation() + AttackOffset - CollectedActors[i]->GetActorLocation()).Size() || ClosestActor == nullptr))
+			{
+				// Assign Closest Actor
+				ClosestActor = CollectedActors[i];
+			}
+		}
+	}
+	if(ClosestActor != nullptr && (GetActorLocation() + AttackOffset - ClosestActor->GetActorLocation()).Size() <= SnapToDistance)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Closest Actor: %s"), *ClosestActor->GetName()));
+		
+		FVector Direction = FVector(ClosestActor->GetActorLocation().X - GetActorLocation().X, ClosestActor->GetActorLocation().Y - GetActorLocation().Y, 0.0f);
+		Direction.Normalize();
+		AttackVelocity = Direction * AttackVelocityModifier;
+		//SetActorRotation(Direction.Rotation());
+		AttackRotation = Direction.Rotation();
+	}
+	else
+	{
+		AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+		//SetActorRotation(FRotator(0.0f, AttackDir, 0.0f));
+		AttackRotation = FRotator(0.0f, AttackDir, 0.0f);
+	}
 }
 
 void ATeardevilCharacter::AttackTimer()
