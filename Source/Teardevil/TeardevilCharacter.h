@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <string>
+#include <openexr/Deploy/include/ImfArray.h>
+
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
@@ -35,6 +38,12 @@ public:
 
 protected:
 
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
 
@@ -52,6 +61,22 @@ protected:
 
 	// Logic for Punch
 	void Punch(float X, float Y, float DeltaTime);
+
+	// Logic for Attacks
+	void Attack();
+
+	// Check Collision On Limbs
+	void AttackCollision();
+
+	// Move During Attack
+	UFUNCTION(BlueprintCallable)
+	void AttackMovement(float DeltaTime);
+
+	// Logic for Animations
+	void PlayAnimations(int Dir);
+
+	// Timer for Attack Animations
+	void AttackTimer();
 	
 	// Called When Key Pressed
 	void DodgePressed();
@@ -99,6 +124,8 @@ public:
 		USphereComponent* LeftHandCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USphereComponent* RightHandCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* RightFootCollision;
 	
 	// Global Variables
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
@@ -122,20 +149,55 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         float DodgeVelocityModifier;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
-    float AirDodgeVelocityModifier;
+		float AirDodgeVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AnimPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float LeftTransitionPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float RightTransitionPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float BackTransitionPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AttackVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AttackTravelSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float ComboDelay;
+
+	float AttackDir;
+	
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickX;
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickY;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DeadZone;
+
+	UPROPERTY(BlueprintReadOnly)
+		TArray<int> DirectionArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		int Damage;
+
+	int AttackCtr;
+	int LastAttackDir;
+	int TransitionDir;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		FVector AttackMoveLocation;
+	
 	FVector CurrentLocation;
 	FVector DodgeLocation;
+	FVector AttackVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         FVector DodgeVelocity;
 
-	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
+
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsDodging;
@@ -145,13 +207,40 @@ public:
     	bool bIsLeftPunching;
     UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsRightPunching;
-	
-	bool bDodgeKeyHeld;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bIsAttacking;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bNextAttack;
+	UPROPERTY(BlueprintReadWrite)
+		bool bCollideDuringAnim;
+
+	UPROPERTY(BlueprintReadOnly)
+		bool bDodgeKeyHeld;
 	bool bDodgeLoop;
 	bool bSetActorX;
 	bool bSetActorY;
 	bool bDodgeInAir;
 
+
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+        TSubclassOf<class AActor> Onomatopoeia;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* AnimFirstAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* AnimSecondAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* AnimThirdAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* LeftTransitionAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* RightTransitionAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* BackTransitionAttack;
+	
 	FTimerHandle DodgeTimerHandle;
+
+	UPROPERTY(BlueprintReadWrite)
+		FTimerHandle AttackTimerHandle;
 };
 
