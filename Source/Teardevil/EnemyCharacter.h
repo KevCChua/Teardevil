@@ -27,10 +27,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Functions
-	void Damaged(int Value, FVector Location, FVector ActorLocation);
+	UFUNCTION(BlueprintCallable)
+	void Damaged(int Value, FVector Location, FVector ActorLocation, float StunDuration);
 	void DestroyEnemy(FVector Location);
 	UFUNCTION(BlueprintImplementableEvent)
 	void StopAIBehaviour();
+	UFUNCTION(BlueprintImplementableEvent)
+    void Stun(float Duration);
 	
 	
 	// Variables
@@ -45,5 +48,6 @@ public:
         float ImpactRadius;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float KnockBackDistance;
+	
 	
 };

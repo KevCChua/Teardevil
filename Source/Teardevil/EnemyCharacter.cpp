@@ -36,7 +36,7 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
-void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector ActorLocation)
+void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector ActorLocation, float StunDuration)
 {
 	Health -= Value;
 	FVector KnockBackDirection = FVector(GetActorLocation().X - ActorLocation.X, GetActorLocation().Y - ActorLocation.Y, 0.0f);
@@ -45,7 +45,13 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	if(Health <= 0)
 		DestroyEnemy(ComponentLocation);
 	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
+		Stun(StunDuration);
 		SetActorLocation(GetActorLocation() + KnockBackDirection * KnockBackDistance);
+	}
+		
+	
 }
 
 void AEnemyCharacter::DestroyEnemy(FVector Location)
