@@ -10,6 +10,36 @@
 #include "GameFramework/Character.h"
 #include "TeardevilCharacter.generated.h"
 
+USTRUCT(BlueprintType)
+struct FAnimStruct
+{
+	GENERATED_USTRUCT_BODY()
+	
+    UPROPERTY(EditDefaultsOnly)
+	UAnimSequenceBase* AnimAsset;
+
+	UPROPERTY(EditDefaultsOnly)
+	FName SlotName;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float AnimSpeed;
+
+	UPROPERTY(EditDefaultsOnly)
+	float StunDuration;
+	
+	UPROPERTY(EditDefaultsOnly)
+	bool bIsFinishMove;
+};
+
+USTRUCT(BlueprintType)
+struct FComboStruct
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FAnimStruct> Combo;
+};
+
 UCLASS(config=Game)
 class ATeardevilCharacter : public ACharacter
 {
@@ -75,8 +105,14 @@ protected:
 	// Logic for Animations
 	void PlayAnimations(int Dir);
 
+	// Check Closest Enemy
+	void TargetEnemy();
+
 	// Timer for Attack Animations
 	void AttackTimer();
+
+	// Timer for Frame Skip
+	void FrameSkipTimer();
 	
 	// Called When Key Pressed
 	void DodgePressed();
@@ -164,6 +200,16 @@ public:
 		float AttackTravelSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 		float ComboDelay;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float SnapToDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float OffsetDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float RotateSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float FrameSkipDilation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float FrameSkipDuration;
 
 	float AttackDir;
 	
@@ -183,6 +229,7 @@ public:
 		int Damage;
 
 	int AttackCtr;
+	int AnimationSequence;
 	int LastAttackDir;
 	int TransitionDir;
 
@@ -192,10 +239,12 @@ public:
 	FVector CurrentLocation;
 	FVector DodgeLocation;
 	FVector AttackVelocity;
+	FVector AttackOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         FVector DodgeVelocity;
 
+	FRotator AttackRotation;
 
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;
@@ -220,10 +269,14 @@ public:
 	bool bSetActorX;
 	bool bSetActorY;
 	bool bDodgeInAir;
+	bool bFinishMove;
 
 
 	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
         TSubclassOf<class AActor> Onomatopoeia;
+
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+	TArray<FComboStruct> AnimArray;
 	
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* AnimFirstAttack;
@@ -239,6 +292,7 @@ public:
 		UAnimSequenceBase* BackTransitionAttack;
 	
 	FTimerHandle DodgeTimerHandle;
+	FTimerHandle FrameSkipHandle;
 
 	UPROPERTY(BlueprintReadWrite)
 		FTimerHandle AttackTimerHandle;
