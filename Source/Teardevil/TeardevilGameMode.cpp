@@ -12,4 +12,8 @@ ATeardevilGameMode::ATeardevilGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+	Timer = 0;
+	Destructable = 0;
+	Enemies = 0;
+	Score = 0;
 }
