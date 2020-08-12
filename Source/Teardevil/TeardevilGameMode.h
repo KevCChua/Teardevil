@@ -13,6 +13,12 @@ class ATeardevilGameMode : public AGameModeBase
 
 public:
 	ATeardevilGameMode();
+
+	UPROPERTY(Category = "Global", BlueprintReadWrite, EditAnywhere)
+	int32 MaxEnemies = 30;
+
+	UPROPERTY(Category = "Global", BlueprintReadWrite, EditAnywhere)
+	int32 CurrentEnemies = 0;
 };
 
 
