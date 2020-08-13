@@ -162,6 +162,8 @@ public:
 		USphereComponent* RightHandCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USphereComponent* RightFootCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* AttackCollider;
 	
 	// Global Variables
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
@@ -262,6 +264,8 @@ public:
 		bool bNextAttack;
 	UPROPERTY(BlueprintReadWrite)
 		bool bCollideDuringAnim;
+	UPROPERTY(BlueprintReadWrite)
+		bool bBufferedAttack;
 
 	UPROPERTY(BlueprintReadOnly)
 		bool bDodgeKeyHeld;
