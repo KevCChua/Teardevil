@@ -111,7 +111,8 @@ protected:
 	// Timer for Attack Animations
 	void AttackTimer();
 
-	void PlayerDamaged();
+	UFUNCTION(BlueprintCallable)
+	void PlayerDamaged(int Value);
 
 	// Timer for Frame Skip
 	void FrameSkipTimer();

@@ -727,7 +727,7 @@ void ATeardevilCharacter::AttackTimer()
 	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 }
 
-void ATeardevilCharacter::PlayerDamaged()
+void ATeardevilCharacter::PlayerDamaged(int Value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
 }
