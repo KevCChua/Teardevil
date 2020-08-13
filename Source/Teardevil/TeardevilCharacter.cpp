@@ -56,16 +56,20 @@ ATeardevilCharacter::ATeardevilCharacter()
 	//FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Create Left Hand Collider
-	LeftHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("LeftHandCollision"));
-	LeftHandCollision->SetupAttachment(this->GetMesh());
+	//LeftHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("LeftHandCollision"));
+	//LeftHandCollision->SetupAttachment(this->GetMesh());
 	
 	// Create Right Hand Collider
-	RightHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightHandCollision"));
-	RightHandCollision->SetupAttachment(this->GetMesh());
+	//RightHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightHandCollision"));
+	//RightHandCollision->SetupAttachment(this->GetMesh());
 
 	// Create Right Foot Collider
-	RightFootCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightFootCollision"));
-	RightFootCollision->SetupAttachment(this->GetMesh());
+	//RightFootCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightFootCollision"));
+	//RightFootCollision->SetupAttachment(this->GetMesh());
+
+	// Create Attack Collider
+	AttackCollider = CreateDefaultSubobject<USphereComponent>(TEXT("AttackCollider"));
+	AttackCollider->SetupAttachment(this->GetMesh());
 
 	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
@@ -322,13 +326,17 @@ void ATeardevilCharacter::Attack()
 	// Get Angle Of Right Stick
 	float AttackDirection = FMath::RadiansToDegrees(FMath::Atan2(RightStickY, RightStickX));
 	//GEngine->AddOnScreenDebugMessage(1, 2.f, FColor::Green, FString::Printf(TEXT("Direction Pressed: %f"), AttackDirection));
-	
+
+	// Check If Right Stick is Being Pressed
 	if(abs(RightStickX) > DeadZone || abs(RightStickY) > DeadZone)
 	{
+		// Check If Dodge Button Pressed
 		if(!bDodgeKeyHeld)
 		{
+			// Check If Holding, Dodging or Able to Attack
 			if(!bIsHolding && !bIsDodging && bNextAttack)
 			{
+				// Waaaaaaaaaay to many nested statements, dont Forget to fix this! This is what happens when you keep adding on instead of rewriting your damn code
 				//Do it
 				// Up
 				if(AttackDirection <= -67.5f && AttackDirection >= -112.5f)
@@ -428,7 +436,7 @@ void ATeardevilCharacter::Attack()
 				}
 			}
 		}
-		else
+		else if(!this->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 		{
 			DirectionArray.Empty();
 			AttackCtr = 0;
@@ -439,125 +447,31 @@ void ATeardevilCharacter::Attack()
 	{
 		//Reset
 		int NumInArray = DirectionArray.Num();
+		// Full Circle
 		if(NumInArray >= 6)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Full Circle")));
+		// Half Circle
 		/*else if(NumInArray >= 4)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Half Circle")));
+		// Quarter Circle
 		else if(NumInArray >= 3)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Quarter Circle")));*/
+		// Single Punch
 		else if(NumInArray >= 1)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Single Punch")));
-			//if(!this->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 			PlayAnimations(DirectionArray.Top());
 		}
-		//else
-		//	DirectionArray.Empty();
-
-		/*if(DirectionArray.Num() != 0)
-		{
-			int LastIndex = DirectionArray.Top();
-			switch (LastIndex)
-			{
-			case 0:
-				SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
-				break;
-			case 1:
-				SetActorRotation(FRotator(0.0f, -45.0f, 0.0f));
-				break;
-			case 2:
-				SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
-				break;
-			case 3:
-				SetActorRotation(FRotator(0.0f, 45.0f, 0.0f));
-				break;
-			case 4:
-				SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
-				break;
-			case 5:
-				SetActorRotation(FRotator(0.0f, 135.0f, 0.0f));
-				break;
-			case 6:
-				SetActorRotation(FRotator(0.0f, 180.0f, 0.0f));
-				break;
-			case 7:
-				SetActorRotation(FRotator(0.0f, -135.0f, 0.0f));
-				break;
-			
-			default:
-				break;
-			}
-		}*/
 		DirectionArray.Empty();
 	}
 }
 
 void ATeardevilCharacter::AttackCollision()
 {
+	// Create Array to Store Overlapped Actors
 	TArray<AActor*> CollectedActors;
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Attack Counter: %d"), AttackCtr));
-	USphereComponent* ActiveComponent = nullptr;
-	if(TransitionDir == 0)
-	{
-		/*switch (AttackCtr)
-		{
-		case 0:
-			RightFootCollision->GetOverlappingActors(CollectedActors);
-			ActiveComponent = RightFootCollision;
-			break;
-		case 1:
-			LeftHandCollision->GetOverlappingActors(CollectedActors);
-			ActiveComponent = LeftHandCollision;
-			break;
-		case 2:
-			RightHandCollision->GetOverlappingActors(CollectedActors);
-			ActiveComponent = RightHandCollision;
-			break;
-		default:
-			break;
-		}*/
-		if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "hand_lSocket")
-		{
-			LeftHandCollision->GetOverlappingActors(CollectedActors);
-			ActiveComponent = LeftHandCollision;
-		}
-		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "hand_rSocket")
-		{
-			RightHandCollision->GetOverlappingActors(CollectedActors);
-			ActiveComponent = RightHandCollision;
-		}
-		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_lSocket")
-		{
-			// No Socket Yet
-		}
-		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_rSocket")
-		{
-			RightFootCollision->GetOverlappingActors(CollectedActors);
-			ActiveComponent = RightFootCollision;
-		}
-	}
-	else
-	{
-		switch (TransitionDir)
-		{
-			case 1:
-				RightHandCollision->GetOverlappingActors(CollectedActors);
-				ActiveComponent = RightHandCollision;
-				break;
-			case 2:
-				LeftHandCollision->GetOverlappingActors(CollectedActors);
-				ActiveComponent = LeftHandCollision;
-				break;
-			case 3:
-				RightFootCollision->GetOverlappingActors(CollectedActors);
-				ActiveComponent = RightFootCollision;
-				break;
-			default:
-				break;
-		}
-	}
-
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Active Component: %s"), *ActiveComponent->GetName()));
+	// Collect All Overlapping Actors
+	AttackCollider->GetOverlappingActors(CollectedActors);
 	
 	// Iterate Through All Actors In Array
 	for (int i = 0; i < CollectedActors.Num(); i++)
@@ -565,23 +479,32 @@ void ATeardevilCharacter::AttackCollision()
 		// Check If Actor is Self
 		if (CollectedActors[i] != this)
 		{
-			// Debug
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("ActorHit: %s"), *CollectedActors[i]->GetName()));
+			// Cast Collected Object to EnemyCharacter
 			AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 			if(Enemy)
 			{
-
+				// Spawn Onomatopoeia
 				GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 
-				if(AttackCtr != 0 && AnimArray[AnimationSequence].Combo[AttackCtr - 1].bIsFinishMove)
+				if(AttackCtr != 0)
 				{
-					Enemy->Damaged(10, ActiveComponent->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
-					UGameplayStatics::SetGlobalTimeDilation(GetWorld(),0.1);
-					GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, 0.1, false);
+				    if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].bIsFinishMove)
+				    {
+				    	Enemy->Damaged(10, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
+				    	UGameplayStatics::SetGlobalTimeDilation(GetWorld(),0.1);
+				    	GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, 0.1, false);
+				    	AttackTimer();
+				    }
+					else
+					{
+						Enemy->Damaged(Damage, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
+						UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
+						GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
+					}
 				}
 				else
 				{
-					Enemy->Damaged(Damage, ActiveComponent->GetComponentLocation(), GetActorLocation(), 1.0f);
+					Enemy->Damaged(Damage, AttackCollider->GetComponentLocation(), GetActorLocation(), 1.0f);
 					UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
 					GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
 				}
@@ -596,6 +519,7 @@ void ATeardevilCharacter::AttackCollision()
 
 void ATeardevilCharacter::AttackMovement(float DeltaTime)
 {
+	// Check If We Should Move
 	if(bIsAttacking && !bCollideDuringAnim)
 	{
 		GetCharacterMovement()->Velocity.X = FMath::FInterpTo(AttackVelocity.X, 0.0f, DeltaTime, AttackTravelSpeed);
@@ -607,54 +531,26 @@ void ATeardevilCharacter::AttackMovement(float DeltaTime)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("Stop Moving")));
 	}
+	// Rotate Character
 	SetActorRotation(FMath::Lerp(GetActorRotation(), AttackRotation, DeltaTime * RotateSpeed));
 }
 
 void ATeardevilCharacter::PlayAnimations(int Dir)
 {
 	bNextAttack = false;
-	//this->GetMesh()->GetAnimInstance()->StopAllMontages(0);
+	
+	// Check If Should Play Combo Move
 	if(AttackCtr == 0 || (Dir <= LastAttackDir + 1 && Dir >= LastAttackDir - 1) || (Dir == 7 && LastAttackDir == 0) || (Dir == 0 && LastAttackDir == 7))
-	{
-		/////////////////////////// EXISTING
-		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Plus or Minus One")));
-		/*switch(AttackCtr)
-		{
-		case 0:
-			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimFirstAttack, "UpperBody", 0.25f, 0.25f, AnimPlayRate);
-			bFinishMove = false;
-			// Set Timer
-			GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &ATeardevilCharacter::AttackTimer, ComboDelay + (AnimFirstAttack->SequenceLength / AnimPlayRate), false);
-			break;
-		case 1:
-			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimSecondAttack, "UpperBody", 0.25f, 0.25f, AnimPlayRate);
-			bFinishMove = false;
-			// Set Timer
-			GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &ATeardevilCharacter::AttackTimer, ComboDelay+ (AnimSecondAttack->SequenceLength / AnimPlayRate), false);
-			break;
-		case 2:
-			this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimThirdAttack, "UpperBody");
-			bFinishMove = true;
-			// Clear Timer
-			GetWorldTimerManager().ClearTimer(AttackTimerHandle);
-			break;
-		default:
-			break;
-		}
-		if(AttackCtr >= 2)
-			AttackCtr = 0;
-		else
-			AttackCtr++;*/
-		
-		TransitionDir = 0;
-
-		////////////////////////////// TESTING
+	{		
+		// Check If Start of New Combo
 		if(AttackCtr == 0 || AttackCtr >= AnimArray[AnimationSequence].Combo.Num())
 		{
+			// Change Combo
 			AnimationSequence = FMath::RandRange(0, AnimArray.Num() - 1);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Animation Sequence: %d"), AnimationSequence));
+			// Reset Attack Ctr
 			AttackCtr = 0;
 		}
+		// Play Animation
 		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimArray[AnimationSequence].Combo[AttackCtr].AnimAsset, "UpperBody", 0.25f, 0.25f, AnimArray[AnimationSequence].Combo[AttackCtr].AnimSpeed);
 
 		// Set Timer
@@ -663,11 +559,11 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		// Clear Timer
 		else
 			GetWorldTimerManager().ClearTimer(AttackTimerHandle);
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Attack Ctr: %d"), AttackCtr));
+
 		AttackCtr++;
-		
-		
+		TransitionDir = 0;
 	}
+	// Check If Should Play Left Transition Move
 	else if(Dir == LastAttackDir - 2 || (Dir == 7 && LastAttackDir == 1) || (Dir == 6 && LastAttackDir == 0))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Transition")));
@@ -677,6 +573,7 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		TransitionDir = 1;
 		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 	}
+	// Check If Should Play Right Transition Move
 	else if (Dir == LastAttackDir + 2 || (Dir == 0 && LastAttackDir == 6) || (Dir == 1 && LastAttackDir == 7))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Right Transition")));
@@ -686,6 +583,7 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		TransitionDir = 2;
 		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 	}
+	// Else Play Back Transtion Move
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back Transition")));
@@ -737,22 +635,56 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 			AttackOffset = FVector(0,0,0);
 			break;
 	}
-	//FVector setVelocity = ;
-	AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+	// Set Velocity for Target Enemy *****MIGHT NOT NEED*****
+	//AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+	// Get Targeted Enemy
 	TargetEnemy();
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Attack Velocity: %s"), *AttackVelocity.ToString()));
+
+	// Check If Not Transition Move
+	if(TransitionDir == 0)
+	{
+		// Attach Attack Collider To Specified Limb
+		if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "hand_lSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_lSocket");
+		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "hand_rSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_rSocket");
+		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_lSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_lSocket");
+		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_rSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_rSocket");
+	}
+	else
+	{
+		// Attach Attack Collider To Specified Limb
+		switch (TransitionDir)
+		{
+		case 1:
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_rSocket");
+			break;
+		case 2:
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_lSocket");
+			break;
+		case 3:
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_rSocket");
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void ATeardevilCharacter::TargetEnemy()
 {
+	// Create Array To Store All Enemies
 	TArray<AActor*> CollectedActors;
+	// Stores Actor that is Closest to Position
 	AActor* ClosestActor = nullptr;
-	
+	// Get All Actors and Store in Array
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), CollectedActors);
 
 	for (int i = 0; i < CollectedActors.Num(); i++)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Collected Actors: %s"), *CollectedActors[i]->GetName()));
+		// Check if No Actor is Assigned and if not Dead
 		if(ClosestActor == nullptr && !CollectedActors[i]->Tags.Contains("Dead"))
 			ClosestActor = CollectedActors[i];
 		else
@@ -765,20 +697,22 @@ void ATeardevilCharacter::TargetEnemy()
 			}
 		}
 	}
+	// Check If Within Snap To Distance
 	if(ClosestActor != nullptr && (GetActorLocation() + AttackOffset - ClosestActor->GetActorLocation()).Size() <= SnapToDistance)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Closest Actor: %s"), *ClosestActor->GetName()));
-		
+		// Get Direction Of Closest Enemy
 		FVector Direction = FVector(ClosestActor->GetActorLocation().X - GetActorLocation().X, ClosestActor->GetActorLocation().Y - GetActorLocation().Y, 0.0f);
 		Direction.Normalize();
+		// Set Velocity For Movement
 		AttackVelocity = Direction * AttackVelocityModifier;
-		//SetActorRotation(Direction.Rotation());
+		// Set Direction To Turn
 		AttackRotation = Direction.Rotation();
 	}
 	else
 	{
+		// Set Velocity For Movement
 		AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
-		//SetActorRotation(FRotator(0.0f, AttackDir, 0.0f));
+		// Set Direction To Turn
 		AttackRotation = FRotator(0.0f, AttackDir, 0.0f);
 	}
 }
@@ -791,6 +725,11 @@ void ATeardevilCharacter::AttackTimer()
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Combo Ended")));
 	// Clear Timer
 	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+}
+
+void ATeardevilCharacter::PlayerDamaged()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
 }
 
 void ATeardevilCharacter::FrameSkipTimer()

@@ -29,6 +29,8 @@ public:
 	// Functions
 	UFUNCTION(BlueprintCallable)
 	void Damaged(int Value, FVector Location, FVector ActorLocation, float StunDuration);
+	UFUNCTION(BlueprintCallable)
+	void DamagedMovement(float DeltaTime);
 	void DestroyEnemy(FVector Location);
 	UFUNCTION(BlueprintImplementableEvent)
 	void StopAIBehaviour();
@@ -48,6 +50,15 @@ public:
         float ImpactRadius;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float KnockBackDistance;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float KnockBackVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float KnockBackTravelSpeed;
+
+	FVector KnockBackVelocity;
+	FVector KnockBackDestination;
+
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* StunAnimation;
 	
 };
