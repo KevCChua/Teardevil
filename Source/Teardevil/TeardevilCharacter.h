@@ -111,6 +111,8 @@ protected:
 	// Timer for Attack Animations
 	void AttackTimer();
 
+	void PlayerDamaged();
+
 	// Timer for Frame Skip
 	void FrameSkipTimer();
 	

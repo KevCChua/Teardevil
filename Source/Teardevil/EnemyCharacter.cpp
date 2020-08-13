@@ -3,9 +3,12 @@
 
 #include "EnemyCharacter.h"
 
+
+#include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
@@ -47,11 +50,25 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
-		Stun(StunDuration);
-		SetActorLocation(GetActorLocation() + KnockBackDirection * KnockBackDistance);
+		Stun(StunAnimation->SequenceLength);
+		// Play Animation
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(StunAnimation, "UpperBody", 0.25f, 0.25f, 1);
+		KnockBackDestination = GetActorLocation() + KnockBackDirection * KnockBackDistance;
+		KnockBackVelocity = KnockBackDirection * KnockBackVelocityModifier; 
 	}
 		
 	
+}
+
+void AEnemyCharacter::DamagedMovement(float DeltaTime)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, FString::Printf(TEXT("Velocity: %s"), *GetCharacterMovement()->Velocity.ToString()));
+	SetActorLocation(FMath::Lerp(GetActorLocation(),KnockBackDestination, 0.2), true);
+	//SetActorLocation(FMath::VInterpTo(GetActorLocation(), KnockBackDestination, DeltaTime, KnockBackSpeed), true);
+
+	//GetCharacterMovement()->Velocity.X = FMath::FInterpTo(KnockBackVelocity.X, 0.0f, DeltaTime, KnockBackTravelSpeed);
+	//GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(KnockBackVelocity.Y, 0.0f, DeltaTime, KnockBackTravelSpeed);
+	//KnockBackVelocity = GetCharacterMovement()->Velocity;
 }
 
 void AEnemyCharacter::DestroyEnemy(FVector Location)

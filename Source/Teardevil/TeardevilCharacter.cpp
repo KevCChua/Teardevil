@@ -727,6 +727,11 @@ void ATeardevilCharacter::AttackTimer()
 	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 }
 
+void ATeardevilCharacter::PlayerDamaged()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
+}
+
 void ATeardevilCharacter::FrameSkipTimer()
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0);
