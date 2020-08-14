@@ -9,6 +9,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TeardevilGameMode.h"
 
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
@@ -45,10 +46,14 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	FVector KnockBackDirection = FVector(GetActorLocation().X - ActorLocation.X, GetActorLocation().Y - ActorLocation.Y, 0.0f);
 	KnockBackDirection.Normalize();
 	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
-	if(Health <= 0)
+	if (Health <= 0) 
+	{
 		DestroyEnemy(ComponentLocation);
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated();
+	}
 	else
 	{
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->RefreshMultiTimer();
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
 		Stun(StunAnimation->SequenceLength);
 		// Play Animation

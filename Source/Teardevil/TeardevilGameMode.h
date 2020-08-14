@@ -19,6 +19,46 @@ public:
 
 	UPROPERTY(Category = "Global", BlueprintReadWrite, EditAnywhere)
 	int32 CurrentEnemies = 0;
+
+	UPROPERTY(Category = "Score", BlueprintReadWrite, EditAnywhere)
+		float Timer = 0;
+	UPROPERTY(Category = "Score", BlueprintReadWrite, EditAnywhere)
+		float Destructable = 0;
+	UPROPERTY(Category = "Score", BlueprintReadWrite, EditAnywhere)
+		float Enemies = 0;
+	UPROPERTY(Category = "Score", BlueprintReadWrite, EditAnywhere)
+		float Score = 0;
+	UPROPERTY(Category = "Multiplier", BlueprintReadWrite, EditAnywhere)
+		float MULTI_TIMER_MAX = 5.0f;
+	UPROPERTY(Category = "Multiplier", BlueprintReadWrite, EditAnywhere)
+		float Multiplier = 1.0f;
+	UPROPERTY(Category = "Multiplier", BlueprintReadWrite, EditAnywhere)
+		float timerMultiplier = MULTI_TIMER_MAX;
+
+	UFUNCTION(BlueprintCallable)
+		void RefreshMultiTimer()
+	{
+		timerMultiplier = MULTI_TIMER_MAX;
+	}
+
+	void EnemyDefeated() {
+		Enemies += 1.f;
+		AddToScore(200.f);
+		RefreshMultiTimer();
+		Multiplier += 0.2;
+	}
+
+	void ObjectDestroyed() {
+		Destructable += 1.f;
+		AddToScore(100.f);
+		RefreshMultiTimer();
+		Multiplier += 0.1;
+	}
+
+	void AddToScore(float _Score)
+	{
+		Score += _Score * Multiplier;
+	}
 };
 
 
