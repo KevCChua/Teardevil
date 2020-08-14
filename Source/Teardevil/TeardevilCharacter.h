@@ -2,10 +2,43 @@
 
 #pragma once
 
+#include <string>
+#include <openexr/Deploy/include/ImfArray.h>
+
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
 #include "TeardevilCharacter.generated.h"
+
+USTRUCT(BlueprintType)
+struct FAnimStruct
+{
+	GENERATED_USTRUCT_BODY()
+	
+    UPROPERTY(EditDefaultsOnly)
+	UAnimSequenceBase* AnimAsset;
+
+	UPROPERTY(EditDefaultsOnly)
+	FName SlotName;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float AnimSpeed;
+
+	UPROPERTY(EditDefaultsOnly)
+	float StunDuration;
+	
+	UPROPERTY(EditDefaultsOnly)
+	bool bIsFinishMove;
+};
+
+USTRUCT(BlueprintType)
+struct FComboStruct
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FAnimStruct> Combo;
+};
 
 UCLASS(config=Game)
 class ATeardevilCharacter : public ACharacter
@@ -33,11 +66,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = GrabItem)
-	bool bIsHolding;*/
-
 protected:
 
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
 
@@ -55,6 +91,30 @@ protected:
 
 	// Logic for Punch
 	void Punch(float X, float Y, float DeltaTime);
+
+	// Logic for Attacks
+	void Attack();
+
+	// Check Collision On Limbs
+	void AttackCollision();
+
+	// Move During Attack
+	UFUNCTION(BlueprintCallable)
+	void AttackMovement(float DeltaTime);
+
+	// Logic for Animations
+	void PlayAnimations(int Dir);
+
+	// Check Closest Enemy
+	void TargetEnemy();
+
+	// Timer for Attack Animations
+	void AttackTimer();
+
+	void PlayerDamaged();
+
+	// Timer for Frame Skip
+	void FrameSkipTimer();
 	
 	// Called When Key Pressed
 	void DodgePressed();
@@ -102,6 +162,10 @@ public:
 		USphereComponent* LeftHandCollision;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USphereComponent* RightHandCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* RightFootCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USphereComponent* AttackCollider;
 	
 	// Global Variables
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
@@ -126,6 +190,33 @@ public:
         float DodgeVelocityModifier;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float AirDodgeVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AnimPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float LeftTransitionPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float RightTransitionPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float BackTransitionPlayRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AttackVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float AttackTravelSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float ComboDelay;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float SnapToDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float OffsetDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float RotateSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float FrameSkipDilation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+		float FrameSkipDuration;
+
+	float AttackDir;
+	
 	
 	UPROPERTY(BlueprintReadOnly, Category = MyVariables)
 		float RightStickX;
@@ -133,13 +224,31 @@ public:
 		float RightStickY;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float DeadZone;
+
+	UPROPERTY(BlueprintReadOnly)
+		TArray<int> DirectionArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		int Damage;
+
+	int AttackCtr;
+	int AnimationSequence;
+	int LastAttackDir;
+	int TransitionDir;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		FVector AttackMoveLocation;
 	
 	FVector CurrentLocation;
 	FVector DodgeLocation;
+	FVector AttackVelocity;
+	FVector AttackOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         FVector DodgeVelocity;
+
+	FRotator AttackRotation;
 
 	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
 		bool bIsPunching;
@@ -151,6 +260,14 @@ public:
     	bool bIsLeftPunching;
     UPROPERTY(BlueprintReadWrite, Category = MyVariables)
     	bool bIsRightPunching;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bIsAttacking;
+	UPROPERTY(BlueprintReadWrite, Category = MyVariables)
+		bool bNextAttack;
+	UPROPERTY(BlueprintReadWrite)
+		bool bCollideDuringAnim;
+	UPROPERTY(BlueprintReadWrite)
+		bool bBufferedAttack;
 
 	UPROPERTY(BlueprintReadOnly)
 		bool bDodgeKeyHeld;
@@ -158,10 +275,32 @@ public:
 	bool bSetActorX;
 	bool bSetActorY;
 	bool bDodgeInAir;
+	bool bFinishMove;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
         TSubclassOf<class AActor> Onomatopoeia;
+
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+	TArray<FComboStruct> AnimArray;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* AnimFirstAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* AnimSecondAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* AnimThirdAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* LeftTransitionAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* RightTransitionAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* BackTransitionAttack;
 	
 	FTimerHandle DodgeTimerHandle;
+	FTimerHandle FrameSkipHandle;
+
+	UPROPERTY(BlueprintReadWrite)
+		FTimerHandle AttackTimerHandle;
 };
 

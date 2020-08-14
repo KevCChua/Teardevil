@@ -14,14 +14,11 @@ class ATeardevilGameMode : public AGameModeBase
 public:
 	ATeardevilGameMode();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
-		float Timer;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
-		float Destructable;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
-		float Enemies;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
-		float Score;
+	UPROPERTY(Category = "Global", BlueprintReadWrite, EditAnywhere)
+	int32 MaxEnemies = 30;
+
+	UPROPERTY(Category = "Global", BlueprintReadWrite, EditAnywhere)
+	int32 CurrentEnemies = 0;
 };
 
 

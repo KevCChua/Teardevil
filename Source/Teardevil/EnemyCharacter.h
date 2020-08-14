@@ -27,10 +27,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Functions
-	void Damaged(int Value, FVector Location);
+	UFUNCTION(BlueprintCallable)
+	void Damaged(int Value, FVector Location, FVector ActorLocation, float StunDuration);
+	UFUNCTION(BlueprintCallable)
+	void DamagedMovement(float DeltaTime);
 	void DestroyEnemy(FVector Location);
 	UFUNCTION(BlueprintImplementableEvent)
 	void StopAIBehaviour();
+	UFUNCTION(BlueprintImplementableEvent)
+    void Stun(float Duration);
 	
 	
 	// Variables
@@ -43,5 +48,17 @@ public:
 		float ImpactForce;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
         float ImpactRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float KnockBackDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float KnockBackVelocityModifier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float KnockBackTravelSpeed;
+
+	FVector KnockBackVelocity;
+	FVector KnockBackDestination;
+
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* StunAnimation;
 	
 };

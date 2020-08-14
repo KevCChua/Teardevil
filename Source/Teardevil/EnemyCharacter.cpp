@@ -3,9 +3,12 @@
 
 #include "EnemyCharacter.h"
 
+
+#include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
@@ -36,21 +39,46 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
-void AEnemyCharacter::Damaged(int Value, FVector Location)
+void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector ActorLocation, float StunDuration)
 {
 	Health -= Value;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
+	FVector KnockBackDirection = FVector(GetActorLocation().X - ActorLocation.X, GetActorLocation().Y - ActorLocation.Y, 0.0f);
+	KnockBackDirection.Normalize();
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
 	if(Health <= 0)
-		DestroyEnemy(Location);
+		DestroyEnemy(ComponentLocation);
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
+		Stun(StunAnimation->SequenceLength);
+		// Play Animation
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(StunAnimation, "UpperBody", 0.25f, 0.25f, 1);
+		KnockBackDestination = GetActorLocation() + KnockBackDirection * KnockBackDistance;
+		KnockBackVelocity = KnockBackDirection * KnockBackVelocityModifier; 
+	}
+		
+	
+}
+
+void AEnemyCharacter::DamagedMovement(float DeltaTime)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, FString::Printf(TEXT("Velocity: %s"), *GetCharacterMovement()->Velocity.ToString()));
+	SetActorLocation(FMath::Lerp(GetActorLocation(),KnockBackDestination, 0.2), true);
+	//SetActorLocation(FMath::VInterpTo(GetActorLocation(), KnockBackDestination, DeltaTime, KnockBackSpeed), true);
+
+	//GetCharacterMovement()->Velocity.X = FMath::FInterpTo(KnockBackVelocity.X, 0.0f, DeltaTime, KnockBackTravelSpeed);
+	//GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(KnockBackVelocity.Y, 0.0f, DeltaTime, KnockBackTravelSpeed);
+	//KnockBackVelocity = GetCharacterMovement()->Velocity;
 }
 
 void AEnemyCharacter::DestroyEnemy(FVector Location)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
 	this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	this->GetMesh()->SetSimulatePhysics(true);
 	this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
 	StopAIBehaviour();
+	Tags.Add("Dead");
 }
 

@@ -2,16 +2,22 @@
 
 #include "TeardevilCharacter.h"
 
+#include <openexr/Deploy/include/ImfArray.h>
+
+
 #include "EnemyCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATeardevilCharacter
@@ -50,12 +56,20 @@ ATeardevilCharacter::ATeardevilCharacter()
 	//FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Create Left Hand Collider
-	LeftHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("LeftHandCollision"));
-	LeftHandCollision->SetupAttachment(this->GetMesh());
+	//LeftHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("LeftHandCollision"));
+	//LeftHandCollision->SetupAttachment(this->GetMesh());
 	
 	// Create Right Hand Collider
-	RightHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightHandCollision"));
-	RightHandCollision->SetupAttachment(this->GetMesh());
+	//RightHandCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightHandCollision"));
+	//RightHandCollision->SetupAttachment(this->GetMesh());
+
+	// Create Right Foot Collider
+	//RightFootCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RightFootCollision"));
+	//RightFootCollision->SetupAttachment(this->GetMesh());
+
+	// Create Attack Collider
+	AttackCollider = CreateDefaultSubobject<USphereComponent>(TEXT("AttackCollider"));
+	AttackCollider->SetupAttachment(this->GetMesh());
 
 	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
@@ -66,6 +80,10 @@ ATeardevilCharacter::ATeardevilCharacter()
 	bSetActorY = true;
 	bIsLeftPunching = false;
 	bIsRightPunching = false;
+
+	bNextAttack = true;
+
+	AttackOffset = FVector(0,0,0);
 }
 
 void ATeardevilCharacter::Tick(float DeltaTime)
@@ -74,7 +92,10 @@ void ATeardevilCharacter::Tick(float DeltaTime)
 	// Set Current Location To Variable
 	CurrentLocation = GetActorLocation();
 	// Call Function
-	Punch(RightStickX, RightStickY, DeltaTime);
+	//Punch(RightStickX, RightStickY, DeltaTime);
+	Attack();
+	if(bIsAttacking)
+		AttackCollision();
 	// Check If Dodging
 	if (bIsDodging)
 	{
@@ -116,8 +137,29 @@ void ATeardevilCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ATeardevilCharacter::OnResetVR);
+
+
 }
 
+
+void ATeardevilCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void ATeardevilCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	//if(bIsAttacking)
+	//{
+		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
+		if(Enemy)
+		{
+			bCollideDuringAnim = true;
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Collide: %s"), *OtherActor->GetName()));
+		}
+	//}
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("Enemy Hit: %s"), *OtherActor->GetName()));
+}
 
 void ATeardevilCharacter::OnResetVR()
 {
@@ -150,7 +192,7 @@ void ATeardevilCharacter::LookUpAtRate(float Rate)
 void ATeardevilCharacter::MoveForward(float Value)
 {
 	// Checks If Controlled, Has Value, And If In Dodge
-	if ((Controller != NULL) && (Value != 0.0f) && !bIsDodging)
+	if ((Controller != NULL) && (Value != 0.0f) && !bIsDodging && !GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 	{
 		// Set Rotation For Movement (Constant Since Camera Doesnt Rotate)
 		const FRotator YawRotation(0, -90, 0);
@@ -164,7 +206,7 @@ void ATeardevilCharacter::MoveForward(float Value)
 void ATeardevilCharacter::MoveRight(float Value)
 {
 	// Checks If Controlled, Has Value, And If In Dodge
-	if ( (Controller != NULL) && (Value != 0.0f) && !bIsDodging)
+	if ( (Controller != NULL) && (Value != 0.0f) && !bIsDodging && !GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 	{
 		// Set Rotation For Movement (Constant Since Camera Doesnt Rotate)
 		const FRotator YawRotation(0, -90, 0);
@@ -199,13 +241,12 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 	if (X != 0.0f || Y != 0.0f || bIsLeftPunching || bIsRightPunching)
 	{
 		// Check If Dodge Key Is Held Down
-		if(!bDodgeKeyHeld && !bIsHolding)
+		if(!bDodgeKeyHeld)
 		{
-			// Rotate Character to Direction Pressed
-			if(!bIsDodging)
-				SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, X!=0||Y!=0 ? PunchAngle : GetActorRotation().Yaw, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
-			if(!bIsHolding)
+			if(!bIsHolding && !bIsDodging)
 			{
+				// Rotate Character to Direction Pressed
+				SetActorRotation(FMath::Lerp(GetActorRotation(), FRotator(0.0f, X != 0 || Y != 0 ? PunchAngle : GetActorRotation().Yaw, 0.0f), 1 - FMath::Pow(FMath::Pow(0.7, 1 / DeltaTime), DeltaTime)));
 				// Set Punching Variable
 				bIsPunching = true;
 				//SetActorRotation(FRotator(0.0f, PunchAngle, 0.0f));
@@ -227,14 +268,14 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 							if(Enemy)
 							{
-								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation());
+								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation(), GetActorLocation(), 0.0f);
 								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+								// Empty Array
+								CollectedActors.Empty();							
+								// Stop Punching With Hand
+								bIsLeftPunching = false;
+								break;
 							}
-							// Empty Array
-							CollectedActors.Empty();							
-							// Stop Punching With Hand
-							bIsLeftPunching = false;
-							break;
 						}
 					}
 					bIsPunching = false;
@@ -255,14 +296,14 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 							if(Enemy)
 							{
-								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation());
+								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation(), GetActorLocation(), 0.0f);
 								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+								// Empty Array
+								CollectedActors.Empty();
+								// Stop Punching With Hand
+								bIsRightPunching = false;
+								break;
 							}
-							// Empty Array
-							CollectedActors.Empty();
-							// Stop Punching With Hand
-							bIsRightPunching = false;
-							break;
 						}
 					}
 					bIsPunching = false;
@@ -280,6 +321,425 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 		//bIsPunching = false;
 }
 
+void ATeardevilCharacter::Attack()
+{
+	// Get Angle Of Right Stick
+	float AttackDirection = FMath::RadiansToDegrees(FMath::Atan2(RightStickY, RightStickX));
+	//GEngine->AddOnScreenDebugMessage(1, 2.f, FColor::Green, FString::Printf(TEXT("Direction Pressed: %f"), AttackDirection));
+
+	// Check If Right Stick is Being Pressed
+	if(abs(RightStickX) > DeadZone || abs(RightStickY) > DeadZone)
+	{
+		// Check If Dodge Button Pressed
+		if(!bDodgeKeyHeld)
+		{
+			// Check If Holding, Dodging or Able to Attack
+			if(!bIsHolding && !bIsDodging && bNextAttack)
+			{
+				// Waaaaaaaaaay to many nested statements, dont Forget to fix this! This is what happens when you keep adding on instead of rewriting your damn code
+				//Do it
+				// Up
+				if(AttackDirection <= -67.5f && AttackDirection >= -112.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward")));
+					if(!DirectionArray.Contains(0))
+						DirectionArray.Add(0);
+					else
+					{
+						DirectionArray.Remove(0);
+						DirectionArray.Add(0);
+					}
+				}
+				// Forward-Right
+				else if(AttackDirection <= -22.5f && AttackDirection >= -67.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward-Right")));
+					if(!DirectionArray.Contains(1))
+						DirectionArray.Add(1);
+					else
+					{
+						DirectionArray.Remove(1);
+						DirectionArray.Add(1);
+					}
+				}
+				// Right
+				else if(AttackDirection <= 22.5f && AttackDirection >= -22.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Right")));
+					if(!DirectionArray.Contains(2))
+						DirectionArray.Add(2);
+					else
+					{
+						DirectionArray.Remove(2);
+						DirectionArray.Add(2);
+					}
+				}
+				// Back-Right
+				else if(AttackDirection <= 67.5f && AttackDirection >= 22.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back-Right")));
+					if(!DirectionArray.Contains(3))
+						DirectionArray.Add(3);
+					else
+					{
+						DirectionArray.Remove(3);
+						DirectionArray.Add(3);
+					}
+				}
+				// Back
+				else if(AttackDirection <= 112.5f && AttackDirection >= 67.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back")));
+					if(!DirectionArray.Contains(4))
+						DirectionArray.Add(4);
+					else
+					{
+						DirectionArray.Remove(4);
+						DirectionArray.Add(4);
+					}
+				}
+				// Back-Left
+				else if(AttackDirection <= 157.5f && AttackDirection >= 112.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back-Left")));
+					if(!DirectionArray.Contains(5))
+						DirectionArray.Add(5);
+					else
+					{
+						DirectionArray.Remove(5);
+						DirectionArray.Add(5);
+					}
+				}
+				// Left
+				else if(AttackDirection <= -157.5f || AttackDirection >= 157.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left")));
+					if(!DirectionArray.Contains(6))
+						DirectionArray.Add(6);
+					else
+					{
+						DirectionArray.Remove(6);
+						DirectionArray.Add(6);
+					}
+				}
+				// Forward-Left
+				else if(AttackDirection <= -112.5f && AttackDirection >= -157.5f)
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward-Left")));
+					if(!DirectionArray.Contains(7))
+						DirectionArray.Add(7);
+					else
+					{
+						DirectionArray.Remove(7);
+						DirectionArray.Add(7);
+					}
+				}
+			}
+		}
+		else if(!this->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
+		{
+			DirectionArray.Empty();
+			AttackCtr = 0;
+			DodgePressed();
+		}
+	}
+	else
+	{
+		//Reset
+		int NumInArray = DirectionArray.Num();
+		// Full Circle
+		if(NumInArray >= 6)
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Full Circle")));
+		// Half Circle
+		/*else if(NumInArray >= 4)
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Half Circle")));
+		// Quarter Circle
+		else if(NumInArray >= 3)
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Quarter Circle")));*/
+		// Single Punch
+		else if(NumInArray >= 1)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Single Punch")));
+			PlayAnimations(DirectionArray.Top());
+		}
+		DirectionArray.Empty();
+	}
+}
+
+void ATeardevilCharacter::AttackCollision()
+{
+	// Create Array to Store Overlapped Actors
+	TArray<AActor*> CollectedActors;
+	// Collect All Overlapping Actors
+	AttackCollider->GetOverlappingActors(CollectedActors);
+	
+	// Iterate Through All Actors In Array
+	for (int i = 0; i < CollectedActors.Num(); i++)
+	{
+		// Check If Actor is Self
+		if (CollectedActors[i] != this)
+		{
+			// Cast Collected Object to EnemyCharacter
+			AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
+			if(Enemy)
+			{
+				// Spawn Onomatopoeia
+				GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+
+				if(AttackCtr != 0)
+				{
+				    if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].bIsFinishMove)
+				    {
+				    	Enemy->Damaged(10, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
+				    	UGameplayStatics::SetGlobalTimeDilation(GetWorld(),0.1);
+				    	GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, 0.1, false);
+				    	AttackTimer();
+				    }
+					else
+					{
+						Enemy->Damaged(Damage, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
+						UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
+						GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
+					}
+				}
+				else
+				{
+					Enemy->Damaged(Damage, AttackCollider->GetComponentLocation(), GetActorLocation(), 1.0f);
+					UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
+					GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
+				}
+				// Empty Array
+				CollectedActors.Empty();
+				bIsAttacking = false;
+				break;
+			}
+		}
+	}
+}
+
+void ATeardevilCharacter::AttackMovement(float DeltaTime)
+{
+	// Check If We Should Move
+	if(bIsAttacking && !bCollideDuringAnim)
+	{
+		GetCharacterMovement()->Velocity.X = FMath::FInterpTo(AttackVelocity.X, 0.0f, DeltaTime, AttackTravelSpeed);
+		GetCharacterMovement()->Velocity.Y = FMath::FInterpTo(AttackVelocity.Y, 0.0f, DeltaTime, AttackTravelSpeed);
+		AttackVelocity = GetCharacterMovement()->Velocity;
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Velocity: %s"), *AttackVelocity.ToString()));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("Stop Moving")));
+	}
+	// Rotate Character
+	SetActorRotation(FMath::Lerp(GetActorRotation(), AttackRotation, DeltaTime * RotateSpeed));
+}
+
+void ATeardevilCharacter::PlayAnimations(int Dir)
+{
+	bNextAttack = false;
+	
+	// Check If Should Play Combo Move
+	if(AttackCtr == 0 || (Dir <= LastAttackDir + 1 && Dir >= LastAttackDir - 1) || (Dir == 7 && LastAttackDir == 0) || (Dir == 0 && LastAttackDir == 7))
+	{		
+		// Check If Start of New Combo
+		if(AttackCtr == 0 || AttackCtr >= AnimArray[AnimationSequence].Combo.Num())
+		{
+			// Change Combo
+			AnimationSequence = FMath::RandRange(0, AnimArray.Num() - 1);
+			// Reset Attack Ctr
+			AttackCtr = 0;
+		}
+		// Play Animation
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(AnimArray[AnimationSequence].Combo[AttackCtr].AnimAsset, "UpperBody", 0.25f, 0.25f, AnimArray[AnimationSequence].Combo[AttackCtr].AnimSpeed);
+
+		// Set Timer
+		if(!AnimArray[AnimationSequence].Combo[AttackCtr].bIsFinishMove)
+			GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &ATeardevilCharacter::AttackTimer, ComboDelay + (AnimArray[AnimationSequence].Combo[AttackCtr].AnimAsset->SequenceLength / AnimArray[AnimationSequence].Combo[AttackCtr].AnimSpeed), false);
+		// Clear Timer
+		else
+			GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+
+		AttackCtr++;
+		TransitionDir = 0;
+	}
+	// Check If Should Play Left Transition Move
+	else if(Dir == LastAttackDir - 2 || (Dir == 7 && LastAttackDir == 1) || (Dir == 6 && LastAttackDir == 0))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left Transition")));
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(LeftTransitionAttack, "UpperBody", 0.25f, 0.25f, LeftTransitionPlayRate);
+		bFinishMove = false;
+		AttackCtr = 0;
+		TransitionDir = 1;
+		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+	}
+	// Check If Should Play Right Transition Move
+	else if (Dir == LastAttackDir + 2 || (Dir == 0 && LastAttackDir == 6) || (Dir == 1 && LastAttackDir == 7))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Right Transition")));
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(RightTransitionAttack, "UpperBody", 0.25f, 0.25f, RightTransitionPlayRate);
+		bFinishMove = false;
+		AttackCtr = 0;
+		TransitionDir = 2;
+		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+	}
+	// Else Play Back Transtion Move
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back Transition")));
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(BackTransitionAttack, "UpperBody", 0.25f, 0.25f, BackTransitionPlayRate);
+		bFinishMove = false;
+		AttackCtr = 0;
+		TransitionDir = 3;
+		GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+	}
+	
+	LastAttackDir = Dir;
+
+
+	switch (Dir)
+	{
+		case 0:
+			AttackOffset = FVector(0, -OffsetDistance, 0);
+			AttackDir = -90;
+			break;
+		case 1:
+			AttackOffset = FVector(OffsetDistance / 1.41421f,-OffsetDistance / 1.41421f,0);
+			AttackDir = -45;
+			break;
+		case 2:
+			AttackOffset = FVector(OffsetDistance, 0, 0);
+			AttackDir = 0;
+			break;
+		case 3:
+			AttackOffset = FVector(OffsetDistance / 1.41421f,OffsetDistance / 1.41421f,0);
+			AttackDir = 45;
+			break;
+		case 4:
+			AttackOffset = FVector(0, OffsetDistance, 0);
+			AttackDir = 90;
+			break;
+		case 5:
+			AttackOffset = FVector(-OffsetDistance / 1.41421f,OffsetDistance / 1.41421f,0);
+			AttackDir = 135;
+			break;
+		case 6:
+			AttackOffset = FVector(-OffsetDistance, 0, 0);
+			AttackDir = 180;
+			break;
+		case 7:
+			AttackOffset = FVector(-OffsetDistance / 1.41421f,-OffsetDistance / 1.41421f,0);
+			AttackDir = -135;
+			break;
+		default:
+			AttackOffset = FVector(0,0,0);
+			break;
+	}
+	// Set Velocity for Target Enemy *****MIGHT NOT NEED*****
+	//AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+	// Get Targeted Enemy
+	TargetEnemy();
+
+	// Check If Not Transition Move
+	if(TransitionDir == 0)
+	{
+		// Attach Attack Collider To Specified Limb
+		if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "hand_lSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_lSocket");
+		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "hand_rSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_rSocket");
+		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_lSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_lSocket");
+		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_rSocket")
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_rSocket");
+	}
+	else
+	{
+		// Attach Attack Collider To Specified Limb
+		switch (TransitionDir)
+		{
+		case 1:
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_rSocket");
+			break;
+		case 2:
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hand_lSocket");
+			break;
+		case 3:
+			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_rSocket");
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void ATeardevilCharacter::TargetEnemy()
+{
+	// Create Array To Store All Enemies
+	TArray<AActor*> CollectedActors;
+	// Stores Actor that is Closest to Position
+	AActor* ClosestActor = nullptr;
+	// Get All Actors and Store in Array
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), CollectedActors);
+
+	for (int i = 0; i < CollectedActors.Num(); i++)
+	{
+		// Check if No Actor is Assigned and if not Dead
+		if(ClosestActor == nullptr && !CollectedActors[i]->Tags.Contains("Dead"))
+			ClosestActor = CollectedActors[i];
+		else
+		{
+			// Check If Distance is Greater
+			if(!CollectedActors[i]->Tags.Contains("Dead") && ((GetActorLocation() + AttackOffset - ClosestActor->GetActorLocation()).Size() > (GetActorLocation() + AttackOffset - CollectedActors[i]->GetActorLocation()).Size() || ClosestActor == nullptr))
+			{
+				// Assign Closest Actor
+				ClosestActor = CollectedActors[i];
+			}
+		}
+	}
+	// Check If Within Snap To Distance
+	if(ClosestActor != nullptr && (GetActorLocation() + AttackOffset - ClosestActor->GetActorLocation()).Size() <= SnapToDistance)
+	{
+		// Get Direction Of Closest Enemy
+		FVector Direction = FVector(ClosestActor->GetActorLocation().X - GetActorLocation().X, ClosestActor->GetActorLocation().Y - GetActorLocation().Y, 0.0f);
+		Direction.Normalize();
+		// Set Velocity For Movement
+		AttackVelocity = Direction * AttackVelocityModifier;
+		// Set Direction To Turn
+		AttackRotation = Direction.Rotation();
+	}
+	else
+	{
+		// Set Velocity For Movement
+		AttackVelocity = FRotator(0.0f, AttackDir, 0.0f).Vector() * AttackVelocityModifier;
+		// Set Direction To Turn
+		AttackRotation = FRotator(0.0f, AttackDir, 0.0f);
+	}
+}
+
+void ATeardevilCharacter::AttackTimer()
+{
+	AttackCtr = 0;
+	TransitionDir = 0;
+	bNextAttack = true;
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Combo Ended")));
+	// Clear Timer
+	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+}
+
+void ATeardevilCharacter::PlayerDamaged()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
+}
+
+void ATeardevilCharacter::FrameSkipTimer()
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0);
+	
+	// Clear Timer
+	GetWorldTimerManager().ClearTimer(FrameSkipHandle);
+}
+
 void ATeardevilCharacter::DodgePressed()
 {
 	// Set Key Held Variable to True
@@ -288,7 +748,7 @@ void ATeardevilCharacter::DodgePressed()
 	if (RightStickX != 0.0f || RightStickY != 0.0f)
 	{
 		// Since DodgePressed Is Called Every Frame Key is Held, Check If Executed Before 
-		if (!bDodgeLoop && !bIsHolding)
+		if (!bDodgeLoop)
 		{
 			// Set So Only Executes Once
 			bDodgeLoop = true;
