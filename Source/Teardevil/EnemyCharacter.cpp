@@ -4,12 +4,15 @@
 #include "EnemyCharacter.h"
 
 
+
+#include "TeardevilCharacter.h"
 #include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TeardevilGameMode.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
@@ -17,7 +20,9 @@ AEnemyCharacter::AEnemyCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	//Health = 1;
+	// Create Weapon Collider
+	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+	Weapon->SetupAttachment(this->GetMesh());
 }
 
 // Called when the game starts or when spawned
@@ -86,4 +91,27 @@ void AEnemyCharacter::DestroyEnemy(FVector Location)
 	StopAIBehaviour();
 	Tags.Add("Dead");
 }
+
+void AEnemyCharacter::MeleeAttack()
+{
+	this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(MeleeAnimation, "UpperBody", 0.25f, 0.25f, 1);
+}
+
+void AEnemyCharacter::AttackCollision()
+{
+	TArray<AActor*> CollectedActors;
+	Weapon->GetOverlappingActors(CollectedActors, TSubclassOf<ATeardevilCharacter>());
+
+	for (int i = 0; i < CollectedActors.Num(); i++)
+	{
+		ATeardevilCharacter* Player = Cast<ATeardevilCharacter>(CollectedActors[i]);
+		if(Player && bIsAttacking)
+		{
+			Player->PlayerDamaged(Damage);
+			bIsAttacking = false;
+			break;
+		}
+	}
+}
+
 

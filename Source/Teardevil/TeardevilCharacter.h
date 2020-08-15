@@ -111,9 +111,6 @@ protected:
 	// Timer for Attack Animations
 	void AttackTimer();
 
-	UFUNCTION(BlueprintCallable)
-	void PlayerDamaged(int Value);
-
 	// Timer for Frame Skip
 	void FrameSkipTimer();
 	
@@ -158,6 +155,10 @@ public:
 	/** Returns FollowCamera subobject **/
 	//FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	// Functions
+	UFUNCTION(BlueprintCallable)
+	void PlayerDamaged(int Value);
+	
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USphereComponent* LeftHandCollision;
@@ -269,6 +270,8 @@ public:
 		bool bCollideDuringAnim;
 	UPROPERTY(BlueprintReadWrite)
 		bool bBufferedAttack;
+	UPROPERTY(BlueprintReadWrite)
+		bool bIsStunned;
 
 	UPROPERTY(BlueprintReadOnly)
 		bool bDodgeKeyHeld;
@@ -285,18 +288,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 	TArray<FComboStruct> AnimArray;
 	
-	UPROPERTY(EditDefaultsOnly, Category = Animations)
-		UAnimSequenceBase* AnimFirstAttack;
-	UPROPERTY(EditDefaultsOnly, Category = Animations)
-		UAnimSequenceBase* AnimSecondAttack;
-	UPROPERTY(EditDefaultsOnly, Category = Animations)
-		UAnimSequenceBase* AnimThirdAttack;
+	//UPROPERTY(EditDefaultsOnly, Category = Animations)
+	//	UAnimSequenceBase* AnimFirstAttack;
+	//UPROPERTY(EditDefaultsOnly, Category = Animations)
+	//	UAnimSequenceBase* AnimSecondAttack;
+	//UPROPERTY(EditDefaultsOnly, Category = Animations)
+	//	UAnimSequenceBase* AnimThirdAttack;
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* LeftTransitionAttack;
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* RightTransitionAttack;
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* BackTransitionAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* HitReaction;
 	
 	FTimerHandle DodgeTimerHandle;
 	FTimerHandle FrameSkipHandle;
