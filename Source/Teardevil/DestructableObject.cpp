@@ -16,7 +16,6 @@ ADestructableObject::ADestructableObject()
 
 	DestructibleComponent = CreateDefaultSubobject<UDestructibleComponent>(TEXT("DestructableComponent"));
 	DestructibleComponent->SetupAttachment(RootComponent);
-
 }
 
 // Called when the game starts or when spawned
