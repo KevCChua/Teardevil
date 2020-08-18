@@ -114,4 +114,12 @@ void AEnemyCharacter::AttackCollision()
 	}
 }
 
+void AEnemyCharacter::AddCameraShake()
+{
+	if (PunchShake != NULL)
+	{
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(PunchShake, 1.0f);
+	}
+}
+
 
