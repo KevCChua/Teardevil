@@ -33,7 +33,7 @@ public:
 	UPROPERTY(Category = "Multiplier", BlueprintReadWrite, EditAnywhere)
 		float Multiplier = 1.0f;
 	UPROPERTY(Category = "Multiplier", BlueprintReadWrite, EditAnywhere)
-		float timerMultiplier = MULTI_TIMER_MAX;
+		float timerMultiplier = 0.f;
 
 	UFUNCTION(BlueprintCallable)
 		void RefreshMultiTimer()
@@ -45,7 +45,7 @@ public:
 		Enemies += 1.f;
 		AddToScore(200.f);
 		RefreshMultiTimer();
-		Multiplier += 0.2;
+		Multiplier += 1;
 	}
 
 	void ObjectDestroyed() {
