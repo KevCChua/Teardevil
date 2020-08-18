@@ -97,6 +97,11 @@ void AEnemyCharacter::MeleeAttack()
 	this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(MeleeAnimation, "UpperBody", 0.25f, 0.25f, 1);
 }
 
+void AEnemyCharacter::RangedAttack()
+{
+	this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(RangedAnimation, "UpperBody", 0.25f, 0.25f, 1);
+}
+
 void AEnemyCharacter::AttackCollision()
 {
 	TArray<AActor*> CollectedActors;

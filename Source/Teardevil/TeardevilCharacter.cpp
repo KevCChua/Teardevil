@@ -102,6 +102,8 @@ void ATeardevilCharacter::Tick(float DeltaTime)
 		// Call Function
 		DodgeMovement(DeltaTime);
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("IsAttacking: %s"), (bIsAttacking ? TEXT("True") : TEXT("False"))));
+	
 }
 
 //////////////////////////////////////////////////////////////////////////

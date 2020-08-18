@@ -39,6 +39,8 @@ public:
 	UFUNCTION(BlueprintCallable)
     void MeleeAttack();
 	UFUNCTION(BlueprintCallable)
+	void RangedAttack();
+	UFUNCTION(BlueprintCallable)
     void AttackCollision();
 
 	// Components
@@ -72,5 +74,7 @@ public:
 		UAnimSequenceBase* StunAnimation;
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* MeleeAnimation;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* RangedAnimation;
 	
 };
