@@ -40,8 +40,6 @@ public:
     void MeleeAttack();
 	UFUNCTION(BlueprintCallable)
     void AttackCollision();
-	UFUNCTION(BlueprintCallable)
-	void AddCameraShake();
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

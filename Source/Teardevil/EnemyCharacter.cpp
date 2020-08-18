@@ -67,7 +67,10 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 		KnockBackVelocity = KnockBackDirection * KnockBackVelocityModifier; 
 	}
 		
-	
+	if (PunchShake != NULL)
+	{
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(PunchShake, 1.0f);
+	}
 }
 
 void AEnemyCharacter::DamagedMovement(float DeltaTime)
@@ -113,13 +116,4 @@ void AEnemyCharacter::AttackCollision()
 		}
 	}
 }
-
-void AEnemyCharacter::AddCameraShake()
-{
-	if (PunchShake != NULL)
-	{
-		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(PunchShake, 1.0f);
-	}
-}
-
 
