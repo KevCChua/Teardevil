@@ -67,6 +67,9 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		bool bIsAttacking;
 	
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UCameraShake> PunchShake;
+
 	FVector KnockBackVelocity;
 	FVector KnockBackDestination;
 
