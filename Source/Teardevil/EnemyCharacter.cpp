@@ -86,13 +86,16 @@ void AEnemyCharacter::DamagedMovement(float DeltaTime)
 
 void AEnemyCharacter::DestroyEnemy(FVector Location)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
-	this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	this->GetMesh()->SetSimulatePhysics(true);
-	this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
-	StopAIBehaviour();
-	Tags.Add("Dead");
+	if(!Tags.Contains("Dead"))
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
+		this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		this->GetMesh()->SetSimulatePhysics(true);
+		this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
+		StopAIBehaviour();
+		Tags.Add("Dead");
+	}
 }
 
 void AEnemyCharacter::MeleeAttack()
