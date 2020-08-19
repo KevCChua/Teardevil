@@ -102,7 +102,7 @@ void AEnemyCharacter::MeleeAttack()
 
 void AEnemyCharacter::RangedAttack()
 {
-	this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(RangedAnimation, "UpperBody", 0.25f, 0.25f, 1);
+	this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(RangedAnimation, "UpperBody", 0.04f, 0.25f, 1);
 }
 
 void AEnemyCharacter::AttackCollision()
