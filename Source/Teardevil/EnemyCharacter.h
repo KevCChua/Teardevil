@@ -36,7 +36,16 @@ public:
 	void StopAIBehaviour();
 	UFUNCTION(BlueprintImplementableEvent)
     void Stun(float Duration);
-	
+	UFUNCTION(BlueprintCallable)
+    void MeleeAttack();
+	UFUNCTION(BlueprintCallable)
+	void RangedAttack();
+	UFUNCTION(BlueprintCallable)
+    void AttackCollision();
+
+	// Components
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UStaticMeshComponent* Weapon;
 	
 	// Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
@@ -55,10 +64,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float KnockBackTravelSpeed;
 
+	UPROPERTY(BlueprintReadWrite)
+		bool bIsAttacking;
+	
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UCameraShake> PunchShake;
+
 	FVector KnockBackVelocity;
 	FVector KnockBackDestination;
 
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* StunAnimation;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* MeleeAnimation;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* RangedAnimation;
 	
 };

@@ -102,6 +102,8 @@ void ATeardevilCharacter::Tick(float DeltaTime)
 		// Call Function
 		DodgeMovement(DeltaTime);
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("IsAttacking: %s"), (bIsAttacking ? TEXT("True") : TEXT("False"))));
+	
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -729,7 +731,11 @@ void ATeardevilCharacter::AttackTimer()
 
 void ATeardevilCharacter::PlayerDamaged(int Value)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
+	if(!bIsStunned && !bIsDodging)
+	{
+		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(HitReaction, "UpperBody", 0.25f, 0.25f, 1);
+	}
 }
 
 void ATeardevilCharacter::FrameSkipTimer()
