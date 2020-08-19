@@ -48,6 +48,7 @@ public:
 		Multiplier += 0.5;
 	}
 
+	UFUNCTION(BlueprintCallable)
 	void ObjectDestroyed(float _score) {
 		Destructable += 1.f;
 		AddToScore(_score);
