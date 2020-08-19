@@ -63,6 +63,8 @@ public:
 		float KnockBackVelocityModifier;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		float KnockBackTravelSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		float ScoreValue;
 
 	UPROPERTY(BlueprintReadWrite)
 		bool bIsAttacking;

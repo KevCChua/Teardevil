@@ -731,9 +731,10 @@ void ATeardevilCharacter::AttackTimer()
 
 void ATeardevilCharacter::PlayerDamaged(int Value)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
 	if(!bIsStunned && !bIsDodging)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("DO A THING!")));
 		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(HitReaction, "UpperBody", 0.25f, 0.25f, 1);
 	}
 }

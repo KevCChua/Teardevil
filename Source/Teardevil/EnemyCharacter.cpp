@@ -52,13 +52,11 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	KnockBackDirection.Normalize();
 	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Enemy Health: %d"), Health));
 	if (Health <= 0) 
-	{
 		DestroyEnemy(ComponentLocation);
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated(200.0f);
-	}
 	else
 	{
 		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->RefreshMultiTimer();
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->AddToScore(10.0f);
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
 		Stun(StunAnimation->SequenceLength);
 		// Play Animation
@@ -89,6 +87,7 @@ void AEnemyCharacter::DestroyEnemy(FVector Location)
 	if(!Tags.Contains("Dead"))
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated(ScoreValue);
 		this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		this->GetMesh()->SetSimulatePhysics(true);
