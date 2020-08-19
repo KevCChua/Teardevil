@@ -49,7 +49,7 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	if (Health <= 0) 
 	{
 		DestroyEnemy(ComponentLocation);
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated();
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated(200.0f);
 	}
 	else
 	{

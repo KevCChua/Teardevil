@@ -41,16 +41,16 @@ public:
 		timerMultiplier = MULTI_TIMER_MAX;
 	}
 
-	void EnemyDefeated() {
+	void EnemyDefeated(float _score) {
 		Enemies += 1.f;
-		AddToScore(200.f);
+		AddToScore(_score);
 		RefreshMultiTimer();
-		Multiplier += 1;
+		Multiplier += 0.5;
 	}
 
-	void ObjectDestroyed() {
+	void ObjectDestroyed(float _score) {
 		Destructable += 1.f;
-		AddToScore(100.f);
+		AddToScore(_score);
 		RefreshMultiTimer();
 		Multiplier += 0.1;
 	}
