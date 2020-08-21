@@ -56,7 +56,8 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	else
 	{
 		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->RefreshMultiTimer();
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->AddToScore(10.0f);
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->AddToScore(10.0f); 
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->AddToNotoriety(2.0f);
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
 		Stun(StunAnimation->SequenceLength);
 		// Play Animation
