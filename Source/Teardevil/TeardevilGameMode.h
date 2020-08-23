@@ -43,6 +43,8 @@ public:
 		float Notoriety = 0.f;
 	UPROPERTY(Category = "Notoriety", BlueprintReadWrite, EditAnywhere)
 		float NotorieryMax = 120.f;
+	UPROPERTY(Category = "Notoriety", BlueprintReadWrite, EditAnywhere)
+		float NotorieryDecreasePerSecond = 1.f;
 
 
 	UFUNCTION(BlueprintCallable)
@@ -57,7 +59,6 @@ public:
 		AddToScore(_score);
 		RefreshMultiTimer();
 		Multiplier += 0.5;
-		AddToNotoriety(_score / 100.0f);
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -66,13 +67,13 @@ public:
 		AddToScore(_score);
 		RefreshMultiTimer();
 		Multiplier += 0.25;
-		AddToNotoriety(_score / 100.0f);
 	}
 	
 	UFUNCTION(BlueprintCallable)
 	void AddToScore(float _Score)
 	{
 		Score += _Score * Multiplier;
+		AddToNotoriety(_Score / 100.0f);
 	}
 
 	UFUNCTION(BlueprintCallable)
