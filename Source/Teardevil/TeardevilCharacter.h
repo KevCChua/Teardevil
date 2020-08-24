@@ -26,6 +26,9 @@ struct FAnimStruct
 
 	UPROPERTY(EditDefaultsOnly)
 	float StunDuration;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DamageValue;
 	
 	UPROPERTY(EditDefaultsOnly)
 	bool bIsFinishMove;

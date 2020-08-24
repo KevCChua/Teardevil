@@ -38,12 +38,20 @@ public:
 		UDestructibleComponent* DestructibleComponent;
 	
 	// Variables
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
-		float BaseDamage;
+	float BaseDamage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
 		float DamageRadius;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
 		float ImpulseStrength;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
         float BreakMagnitude;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
+		bool bCanPlayerBreak;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
+		bool bCanEnemyBreak;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
+		bool bCanThrowableBreak;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
+		bool bCanBulletBreak;
 };

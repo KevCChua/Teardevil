@@ -91,6 +91,7 @@ void AEnemyCharacter::DestroyEnemy(FVector Location)
 		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated(ScoreValue);
 		this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		this->GetMesh()->SetGenerateOverlapEvents(true);
 		this->GetMesh()->SetSimulatePhysics(true);
 		this->GetMesh()->AddRadialImpulse(Location, ImpactRadius, ImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
 		StopAIBehaviour();

@@ -5,6 +5,7 @@
 #include "TeardevilCharacter.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "DestructibleComponent.h"
 
 // Sets default values
 ADestructableObject::ADestructableObject()
@@ -16,6 +17,8 @@ ADestructableObject::ADestructableObject()
 
 	DestructibleComponent = CreateDefaultSubobject<UDestructibleComponent>(TEXT("DestructableComponent"));
 	DestructibleComponent->SetupAttachment(RootComponent);
+	DestructibleComponent->LargeChunkThreshold = 500.0f;
+	BaseDamage = FLT_MAX;
 }
 
 // Called when the game starts or when spawned
@@ -28,6 +31,9 @@ void ADestructableObject::BeginPlay()
 	//RootComponent.BeginO
 	//OnActorBeginOverlap.AddDynamic(this, &ADestructableObject::OnBeginOverLap);
 	//OnActorHit.AddDynamic(this, &ADestructableObject::OnHit);
+	if(bCanThrowableBreak)
+		DestructibleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Overlap);
+		//DestructibleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel4, ECollisionResponse::ECR_Overlap);
 }
 
 // Called every frame
@@ -62,22 +68,42 @@ void ADestructableObject::OnHit(AActor* SelfActor, AActor* OtherActor, FVector N
 
 void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	/*ATeardevilCharacter* Player = Cast<ATeardevilCharacter>(OtherActor);
-	if(Player)
+	////////////////////////// TEST /////////////////////////////////////
+	ATeardevilCharacter* Player = Cast<ATeardevilCharacter>(OtherActor);
+	if (bCanPlayerBreak && Player)
 	{
-		GEngine->AddOnScreenDebugMessage(20, 2.f, FColor::Green, FString::Printf(TEXT("Overlap Player Hit Magnitude: %f"), Player->GetCharacterMovement()->Velocity.Size()));
-		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Overlap Player Hit Velocity: %s"), *Player->GetCharacterMovement()->Velocity.ToString()));
-		//DestructibleComponent->
+		if(Player->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
+		{
+			DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
+			GEngine->AddOnScreenDebugMessage(25, 2.f, FColor::Green, FString::Printf(TEXT("PUCNCHING BREAK")));
+			return;
+		}
+		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Player")));
+	}
+	else if(bCanThrowableBreak && OtherActor->Tags.Contains("Throwable"))
+	{
+		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Throwable")));
+	}
+	else if(bCanEnemyBreak && OtherActor->Tags.Contains("Dead"))
+	{
+		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherComp->GetComponentLocation(), DamageRadius, ImpulseStrength, true);
+		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Ragdoll")));
+		return;
+	}
+	else if(bCanBulletBreak && OtherActor->Tags.Contains("Bullet"))
+	{
+		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Bullet")));
 	}
 	else
-	{
-		GEngine->AddOnScreenDebugMessage(20, 2.f, FColor::Green, FString::Printf(TEXT("Overlap Other Object Hit Magnitude: %f"), OtherActor->GetVelocity().Size()));
-		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Overlap Other Object Hit Velocity: %s"), *OtherActor->GetVelocity().ToString()));
-	}*/
+		return;
+
+	/////////////////////////////////////////////////////////////////////
+	
 	if(OtherActor->GetVelocity().Size() >= BreakMagnitude || GetVelocity().Size() >= BreakMagnitude)
 	{
 		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
-		OverlapComponent->SetCollisionProfileName("IgnoreOnlyPawn");
+		GEngine->AddOnScreenDebugMessage(22, 2.f, FColor::Green, FString::Printf(TEXT("Yup I Broke")));
+		//OverlapComponent->SetCollisionProfileName("IgnoreOnlyPawn");
 		//OverlapComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		//ApplyRadiusDamage(float BaseDamage, const FVector& HurtOrigin, float DamageRadius, float ImpulseStrength, bool bFullDamage)
 	}
