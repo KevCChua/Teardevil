@@ -102,7 +102,7 @@ void ATeardevilCharacter::Tick(float DeltaTime)
 		// Call Function
 		DodgeMovement(DeltaTime);
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("IsAttacking: %s"), (bIsAttacking ? TEXT("True") : TEXT("False"))));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("IsAttacking: %s"), (bIsAttacking ? TEXT("True") : TEXT("False"))));
 	
 }
 
@@ -333,112 +333,109 @@ void ATeardevilCharacter::Attack()
 	if(abs(RightStickX) > DeadZone || abs(RightStickY) > DeadZone)
 	{
 		// Check If Dodge Button Pressed
-		if(!bDodgeKeyHeld)
+		// Check If Holding, Dodging, Falling or Able to Attack
+		if(!bDodgeKeyHeld && !bIsHolding && !bIsDodging && !GetCharacterMovement()->IsFalling() && bNextAttack)
 		{
-			// Check If Holding, Dodging or Able to Attack
-			if(!bIsHolding && !bIsDodging && bNextAttack)
+			// Waaaaaaaaaay to many nested statements, dont Forget to fix this! This is what happens when you keep adding on instead of rewriting your damn code
+			//Do it
+			// Up
+			if(AttackDirection <= -67.5f && AttackDirection >= -112.5f)
 			{
-				// Waaaaaaaaaay to many nested statements, dont Forget to fix this! This is what happens when you keep adding on instead of rewriting your damn code
-				//Do it
-				// Up
-				if(AttackDirection <= -67.5f && AttackDirection >= -112.5f)
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward")));
+				if(!DirectionArray.Contains(0))
+					DirectionArray.Add(0);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward")));
-					if(!DirectionArray.Contains(0))
-						DirectionArray.Add(0);
-					else
-					{
-						DirectionArray.Remove(0);
-						DirectionArray.Add(0);
-					}
+					DirectionArray.Remove(0);
+					DirectionArray.Add(0);
 				}
-				// Forward-Right
-				else if(AttackDirection <= -22.5f && AttackDirection >= -67.5f)
+			}
+			// Forward-Right
+			else if(AttackDirection <= -22.5f && AttackDirection >= -67.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward-Right")));
+				if(!DirectionArray.Contains(1))
+					DirectionArray.Add(1);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward-Right")));
-					if(!DirectionArray.Contains(1))
-						DirectionArray.Add(1);
-					else
-					{
-						DirectionArray.Remove(1);
-						DirectionArray.Add(1);
-					}
+					DirectionArray.Remove(1);
+					DirectionArray.Add(1);
 				}
-				// Right
-				else if(AttackDirection <= 22.5f && AttackDirection >= -22.5f)
+			}
+			// Right
+			else if(AttackDirection <= 22.5f && AttackDirection >= -22.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Right")));
+				if(!DirectionArray.Contains(2))
+					DirectionArray.Add(2);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Right")));
-					if(!DirectionArray.Contains(2))
-						DirectionArray.Add(2);
-					else
-					{
-						DirectionArray.Remove(2);
-						DirectionArray.Add(2);
-					}
+					DirectionArray.Remove(2);
+					DirectionArray.Add(2);
 				}
-				// Back-Right
-				else if(AttackDirection <= 67.5f && AttackDirection >= 22.5f)
+			}
+			// Back-Right
+			else if(AttackDirection <= 67.5f && AttackDirection >= 22.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back-Right")));
+				if(!DirectionArray.Contains(3))
+					DirectionArray.Add(3);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back-Right")));
-					if(!DirectionArray.Contains(3))
-						DirectionArray.Add(3);
-					else
-					{
-						DirectionArray.Remove(3);
-						DirectionArray.Add(3);
-					}
+					DirectionArray.Remove(3);
+					DirectionArray.Add(3);
 				}
-				// Back
-				else if(AttackDirection <= 112.5f && AttackDirection >= 67.5f)
+			}
+			// Back
+			else if(AttackDirection <= 112.5f && AttackDirection >= 67.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back")));
+				if(!DirectionArray.Contains(4))
+					DirectionArray.Add(4);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back")));
-					if(!DirectionArray.Contains(4))
-						DirectionArray.Add(4);
-					else
-					{
-						DirectionArray.Remove(4);
-						DirectionArray.Add(4);
-					}
+					DirectionArray.Remove(4);
+					DirectionArray.Add(4);
 				}
-				// Back-Left
-				else if(AttackDirection <= 157.5f && AttackDirection >= 112.5f)
+			}
+			// Back-Left
+			else if(AttackDirection <= 157.5f && AttackDirection >= 112.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back-Left")));
+				if(!DirectionArray.Contains(5))
+					DirectionArray.Add(5);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Back-Left")));
-					if(!DirectionArray.Contains(5))
-						DirectionArray.Add(5);
-					else
-					{
-						DirectionArray.Remove(5);
-						DirectionArray.Add(5);
-					}
+					DirectionArray.Remove(5);
+					DirectionArray.Add(5);
 				}
-				// Left
-				else if(AttackDirection <= -157.5f || AttackDirection >= 157.5f)
+			}
+			// Left
+			else if(AttackDirection <= -157.5f || AttackDirection >= 157.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left")));
+				if(!DirectionArray.Contains(6))
+					DirectionArray.Add(6);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Left")));
-					if(!DirectionArray.Contains(6))
-						DirectionArray.Add(6);
-					else
-					{
-						DirectionArray.Remove(6);
-						DirectionArray.Add(6);
-					}
+					DirectionArray.Remove(6);
+					DirectionArray.Add(6);
 				}
-				// Forward-Left
-				else if(AttackDirection <= -112.5f && AttackDirection >= -157.5f)
+			}
+			// Forward-Left
+			else if(AttackDirection <= -112.5f && AttackDirection >= -157.5f)
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward-Left")));
+				if(!DirectionArray.Contains(7))
+					DirectionArray.Add(7);
+				else
 				{
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Forward-Left")));
-					if(!DirectionArray.Contains(7))
-						DirectionArray.Add(7);
-					else
-					{
-						DirectionArray.Remove(7);
-						DirectionArray.Add(7);
-					}
+					DirectionArray.Remove(7);
+					DirectionArray.Add(7);
 				}
 			}
 		}
-		else if(!this->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
+		else if(bDodgeKeyHeld && !this->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
 		{
 			DirectionArray.Empty();
 			AttackCtr = 0;
@@ -492,14 +489,14 @@ void ATeardevilCharacter::AttackCollision()
 				{
 				    if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].bIsFinishMove)
 				    {
-				    	Enemy->Damaged(10, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
+				    	Enemy->Damaged(AnimArray[AnimationSequence].Combo[AttackCtr - 1].DamageValue, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
 				    	UGameplayStatics::SetGlobalTimeDilation(GetWorld(),0.1);
 				    	GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, 0.1, false);
 				    	AttackTimer();
 				    }
 					else
 					{
-						Enemy->Damaged(Damage, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
+						Enemy->Damaged(AnimArray[AnimationSequence].Combo[AttackCtr - 1].DamageValue, AttackCollider->GetComponentLocation(), GetActorLocation(), AnimArray[AnimationSequence].Combo[AttackCtr - 1].StunDuration);
 						UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
 						GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
 					}
