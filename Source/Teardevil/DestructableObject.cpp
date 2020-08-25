@@ -82,7 +82,7 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 	}
 	else if(bCanThrowableBreak && OtherActor->Tags.Contains("Throwable"))
 	{
-		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Throwable")));
+		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Throwable ")));
 	}
 	else if(bCanEnemyBreak && OtherActor->Tags.Contains("Dead"))
 	{
@@ -99,7 +99,7 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 
 	/////////////////////////////////////////////////////////////////////
 	
-	if(OtherActor->GetVelocity().Size() >= BreakMagnitude || GetVelocity().Size() >= BreakMagnitude)
+	if(OtherActor->GetVelocity().Size() >= BreakMagnitude || GetVelocity().Size() >= BreakMagnitude || OtherActor->Tags.Contains("Large"))
 	{
 		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 		GEngine->AddOnScreenDebugMessage(22, 2.f, FColor::Green, FString::Printf(TEXT("Yup I Broke")));
