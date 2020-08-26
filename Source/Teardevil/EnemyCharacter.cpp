@@ -23,6 +23,8 @@ AEnemyCharacter::AEnemyCharacter()
 	// Create Weapon Collider
 	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	Weapon->SetupAttachment(this->GetMesh());
+
+	Name = "Guard";
 }
 
 // Called when the game starts or when spawned
@@ -56,7 +58,7 @@ void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector Acto
 	else
 	{
 		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->RefreshMultiTimer();
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->AddToScore(10.0f); 
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->AddToScore(10.0f, Name); 
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Stun Duration: %f"), StunDuration));
 		Stun(StunAnimation->SequenceLength);
 		// Play Animation
@@ -87,7 +89,7 @@ void AEnemyCharacter::DestroyEnemy(FVector Location)
 	if(!Tags.Contains("Dead"))
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Destroyed")));
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated(ScoreValue);
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->EnemyDefeated(ScoreValue, Name);
 		this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		this->GetMesh()->SetGenerateOverlapEvents(true);
