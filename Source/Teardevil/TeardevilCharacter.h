@@ -304,6 +304,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* BackTransitionAttack;
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
+		UAnimSequenceBase* SpinAttack;
+	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* HitReaction;
 	
 	FTimerHandle DodgeTimerHandle;
