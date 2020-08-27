@@ -73,7 +73,7 @@ public:
 	void AddToScore(float _Score, FName Name)
 	{
 		Score += _Score * Multiplier;
-		AddToNotoriety(_Score * Multiplier / 100.0f);
+		AddToNotoriety(_Score / 100.0f);
 		AddToDisplay(_Score * Multiplier, Name);
 	}
 

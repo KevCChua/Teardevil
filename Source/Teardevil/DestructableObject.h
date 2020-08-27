@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
 		float Score;
 
+	UPROPERTY(EditDefaultsOnly, Category=MyProperties)
+		FName Name;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
 		bool bCanPlayerBreak;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)

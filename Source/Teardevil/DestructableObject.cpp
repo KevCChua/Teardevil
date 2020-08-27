@@ -20,6 +20,9 @@ ADestructableObject::ADestructableObject()
 	DestructibleComponent->SetupAttachment(RootComponent);
 	DestructibleComponent->LargeChunkThreshold = 500.0f;
 	BaseDamage = FLT_MAX;
+
+	Score = 100.0f;
+	Name = "Breakable Object";
 }
 
 // Called when the game starts or when spawned
@@ -69,6 +72,8 @@ void ADestructableObject::OnHit(AActor* SelfActor, AActor* OtherActor, FVector N
 
 void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	if(this->Tags.Contains("Destroyed"))
+		return;
 	////////////////////////// TEST /////////////////////////////////////
 	ATeardevilCharacter* Player = Cast<ATeardevilCharacter>(OtherActor);
 	if (bCanPlayerBreak && Player)
@@ -77,7 +82,8 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 		{
 			DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 			GEngine->AddOnScreenDebugMessage(25, 2.f, FColor::Green, FString::Printf(TEXT("PUCNCHING BREAK")));
-			((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score);
+			((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
+			this->Tags.Add("Destroyed");
 			return;
 		}
 		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Player")));
@@ -105,7 +111,8 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 	{
 		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 		GEngine->AddOnScreenDebugMessage(22, 2.f, FColor::Green, FString::Printf(TEXT("Yup I Broke")));
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score);
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
+		this->Tags.Add("Destroyed");
 		//OverlapComponent->SetCollisionProfileName("IgnoreOnlyPawn");
 		//OverlapComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		//ApplyRadiusDamage(float BaseDamage, const FVector& HurtOrigin, float DamageRadius, float ImpulseStrength, bool bFullDamage)
