@@ -58,7 +58,7 @@ public:
 		Enemies += 1.f;
 		AddToScore(_score, Name);
 		RefreshMultiTimer();
-		Multiplier += 1;
+		Multiplier += 0.5;
 	}
 
 	UFUNCTION(BlueprintCallable)
