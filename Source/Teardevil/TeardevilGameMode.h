@@ -73,7 +73,7 @@ public:
 	void AddToScore(float _Score, FName Name)
 	{
 		Score += _Score * Multiplier;
-		AddToNotoriety(_Score / 100.0f);
+		AddToNotoriety(_Score / 50.f);
 		AddToDisplay(_Score * Multiplier, Name);
 	}
 
@@ -84,6 +84,10 @@ public:
 	void AddToNotoriety(float _Notoriety)
 	{
 		Notoriety += _Notoriety * Multiplier;
+		if (Notoriety >= (NotorieryMax * 2))
+		{
+			Notoriety = (NotorieryMax * 2);
+		}
 	}
 
 	UFUNCTION(BlueprintCallable)
