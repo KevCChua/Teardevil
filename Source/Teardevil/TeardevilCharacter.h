@@ -98,6 +98,9 @@ protected:
 	// Logic for Attacks
 	void Attack();
 
+	// Logic for Special Attacks
+	void SpecialAttack();
+
 	// Check Collision On Limbs
 	void AttackCollision();
 
@@ -275,9 +278,12 @@ public:
 		bool bBufferedAttack;
 	UPROPERTY(BlueprintReadWrite)
 		bool bIsStunned;
-
+	UPROPERTY(BlueprintReadWrite)
+		bool bSpecialMove;
+	
 	UPROPERTY(BlueprintReadOnly)
 		bool bDodgeKeyHeld;
+	
 	bool bDodgeLoop;
 	bool bSetActorX;
 	bool bSetActorY;
@@ -285,8 +291,9 @@ public:
 	bool bFinishMove;
 
 
-	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
-        TSubclassOf<class AActor> Onomatopoeia;
+
+	//UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+    //    TSubclassOf<class AActor> Onomatopoeia;
 
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 	TArray<FComboStruct> AnimArray;

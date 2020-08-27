@@ -6,6 +6,7 @@
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DestructibleComponent.h"
+#include "TeardevilGameMode.h"
 
 // Sets default values
 ADestructableObject::ADestructableObject()
@@ -76,6 +77,7 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 		{
 			DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 			GEngine->AddOnScreenDebugMessage(25, 2.f, FColor::Green, FString::Printf(TEXT("PUCNCHING BREAK")));
+			((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score);
 			return;
 		}
 		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Player")));
@@ -103,6 +105,7 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 	{
 		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 		GEngine->AddOnScreenDebugMessage(22, 2.f, FColor::Green, FString::Printf(TEXT("Yup I Broke")));
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score);
 		//OverlapComponent->SetCollisionProfileName("IgnoreOnlyPawn");
 		//OverlapComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		//ApplyRadiusDamage(float BaseDamage, const FVector& HurtOrigin, float DamageRadius, float ImpulseStrength, bool bFullDamage)

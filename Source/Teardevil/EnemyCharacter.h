@@ -81,5 +81,8 @@ public:
 		UAnimSequenceBase* MeleeAnimation;
 	UPROPERTY(EditDefaultsOnly, Category = Animations)
 		UAnimSequenceBase* RangedAnimation;
+
+	UPROPERTY(EditDefaultsOnly, Category = MyVariables)
+		TSubclassOf<class AActor> Onomatopoeia;
 	
 };

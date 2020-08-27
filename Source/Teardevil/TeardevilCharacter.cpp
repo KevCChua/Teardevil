@@ -271,7 +271,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							if(Enemy)
 							{
 								Enemy->Damaged(Damage, LeftHandCollision->GetComponentLocation(), GetActorLocation(), 0.0f);
-								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+								//GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 								// Empty Array
 								CollectedActors.Empty();							
 								// Stop Punching With Hand
@@ -299,7 +299,7 @@ void ATeardevilCharacter::Punch(float X, float Y, float DeltaTime)
 							if(Enemy)
 							{
 								Enemy->Damaged(Damage, RightHandCollision->GetComponentLocation(), GetActorLocation(), 0.0f);
-								GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
+								//GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
 								// Empty Array
 								CollectedActors.Empty();
 								// Stop Punching With Hand
@@ -448,7 +448,10 @@ void ATeardevilCharacter::Attack()
 		int NumInArray = DirectionArray.Num();
 		// Full Circle
 		if(NumInArray >= 6)
+		{
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Full Circle")));
+			SpecialAttack();
+		}
 		// Half Circle
 		/*else if(NumInArray >= 4)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Half Circle")));
@@ -463,6 +466,17 @@ void ATeardevilCharacter::Attack()
 		}
 		DirectionArray.Empty();
 	}
+}
+
+void ATeardevilCharacter::SpecialAttack()
+{
+	bNextAttack = false;
+	// Play Animation
+	this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(SpinAttack, "UpperBody", 0.25f, 0.25f, 1.0f);
+	GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &ATeardevilCharacter::AttackTimer, SpinAttack->SequenceLength, false);
+	AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "hip_Socket");
+	AttackCollider->SetSphereRadius(100.0f);
+	bSpecialMove = true;
 }
 
 void ATeardevilCharacter::AttackCollision()
@@ -482,10 +496,16 @@ void ATeardevilCharacter::AttackCollision()
 			AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(CollectedActors[i]);
 			if(Enemy)
 			{
-				// Spawn Onomatopoeia
-				GetWorld()->SpawnActor<AActor>(Onomatopoeia,Enemy->GetActorLocation(),FRotator(0, -90, 0));
-
-				if(AttackCtr != 0)
+				if(bSpecialMove)
+				{
+					Enemy->Damaged(1, AttackCollider->GetComponentLocation(), GetActorLocation(), 100.0f);
+					/*if(!Enemy->GetMesh()->GetAnimInstance()->IsPlayingSlotAnimation(Enemy->StunAnimation, "UpperBody"))
+					{
+						UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
+						GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
+					}*/
+				}
+				else if(AttackCtr != 0)
 				{
 				    if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].bIsFinishMove)
 				    {
@@ -500,17 +520,23 @@ void ATeardevilCharacter::AttackCollision()
 						UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
 						GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
 					}
+
+					// Empty Array
+					CollectedActors.Empty();
+					bIsAttacking = false;
+					break;
 				}
 				else
 				{
 					Enemy->Damaged(Damage, AttackCollider->GetComponentLocation(), GetActorLocation(), 1.0f);
 					UGameplayStatics::SetGlobalTimeDilation(GetWorld(),FrameSkipDilation);
 					GetWorld()->GetTimerManager().SetTimer(FrameSkipHandle, this, &ATeardevilCharacter::FrameSkipTimer, FrameSkipDuration, false);
+
+					// Empty Array
+					CollectedActors.Empty();
+					bIsAttacking = false;
+					break;
 				}
-				// Empty Array
-				CollectedActors.Empty();
-				bIsAttacking = false;
-				break;
 			}
 		}
 	}
@@ -651,6 +677,8 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_lSocket");
 		else if(AnimArray[AnimationSequence].Combo[AttackCtr - 1].SlotName == "foot_rSocket")
 			AttackCollider->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "foot_rSocket");
+		// Set Sphere Size
+		AttackCollider->SetSphereRadius(32.0f);
 	}
 	else
 	{
@@ -669,6 +697,8 @@ void ATeardevilCharacter::PlayAnimations(int Dir)
 		default:
 			break;
 		}
+		// Set Sphere Size
+		AttackCollider->SetSphereRadius(32.0f);
 	}
 }
 
@@ -729,7 +759,7 @@ void ATeardevilCharacter::AttackTimer()
 void ATeardevilCharacter::PlayerDamaged(int Value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("Player Has Been Attacked!")));
-	if(!bIsStunned && !bIsDodging)
+	if(!bIsStunned && !bIsDodging && !bSpecialMove)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, FString::Printf(TEXT("DO A THING!")));
 		this->GetMesh()->GetAnimInstance()->PlaySlotAnimationAsDynamicMontage(HitReaction, "UpperBody", 0.25f, 0.25f, 1);

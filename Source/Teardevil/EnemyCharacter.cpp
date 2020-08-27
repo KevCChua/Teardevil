@@ -47,6 +47,12 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AEnemyCharacter::Damaged(int Value, FVector ComponentLocation, FVector ActorLocation, float StunDuration)
 {
+	if(this->Tags.Contains("Dead") || GetMesh()->GetAnimInstance()->IsPlayingSlotAnimation(StunAnimation, "UpperBody") && StunDuration == 100.0f)
+		return;
+
+	// Spawn Onomatopoeia
+	GetWorld()->SpawnActor<AActor>(Onomatopoeia,GetActorLocation(),FRotator(0, -90, 0));
+	
 	Health -= Value;
 	FVector KnockBackDirection = FVector(GetActorLocation().X - ActorLocation.X, GetActorLocation().Y - ActorLocation.Y, 0.0f);
 	KnockBackDirection.Normalize();

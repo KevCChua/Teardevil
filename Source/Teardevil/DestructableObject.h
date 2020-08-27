@@ -45,6 +45,8 @@ public:
 		float ImpulseStrength;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
         float BreakMagnitude;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
+		float Score;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
 		bool bCanPlayerBreak;
