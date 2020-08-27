@@ -54,27 +54,31 @@ public:
 		StartCombo = true;
 	}
 
-	void EnemyDefeated(float _score) {
+	void EnemyDefeated(float _score, FName Name) {
 		Enemies += 1.f;
-		AddToScore(_score);
+		AddToScore(_score, Name);
 		RefreshMultiTimer();
 		Multiplier += 0.5;
 	}
 
 	UFUNCTION(BlueprintCallable)
-	void ObjectDestroyed(float _score) {
+	void ObjectDestroyed(float _score, FName Name) {
 		Destructable += 1.f;
-		AddToScore(_score);
+		AddToScore(_score, Name);
 		RefreshMultiTimer();
 		Multiplier += 0.25;
 	}
 	
 	UFUNCTION(BlueprintCallable)
-	void AddToScore(float _Score)
+	void AddToScore(float _Score, FName Name)
 	{
 		Score += _Score * Multiplier;
-		AddToNotoriety(_Score / 100.0f);
+		AddToNotoriety(_Score * Multiplier / 100.0f);
+		AddToDisplay(_Score * Multiplier, Name);
 	}
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void AddToDisplay(float _score, FName Name);
 
 	UFUNCTION(BlueprintCallable)
 	void AddToNotoriety(float _Notoriety)

@@ -49,6 +49,8 @@ public:
 	
 	// Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
+		FName Name;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		int Health;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyVariables)
 		int Damage;
