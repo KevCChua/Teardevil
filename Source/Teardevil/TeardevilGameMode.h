@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "UserWidget.h"
 #include "TeardevilGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -68,10 +67,7 @@ public:
 		AddToScore(_score, Name);
 		RefreshMultiTimer();
 		Multiplier += 0.25;
-
 	}
-
-	
 	
 	UFUNCTION(BlueprintCallable)
 	void AddToScore(float _Score, FName Name)
