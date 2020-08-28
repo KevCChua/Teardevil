@@ -29,10 +29,15 @@ public:
 	void OnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
 
 	UFUNCTION()
+		void OnFracture(const FVector& HitPoint, const FVector& HitDirection);
+	UFUNCTION()
 		void OnBeginOverLap(class UPrimitiveComponent* OverlapComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void OnBeginOverLapTest(class UPrimitiveComponent* OverlapComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	void CollisionTimer();
+	void DestroyTimer();
 	// Components
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category=MyDestructable)
 		UDestructibleComponent* DestructibleComponent;
@@ -59,4 +64,7 @@ public:
 		bool bCanThrowableBreak;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MyProperties)
 		bool bCanBulletBreak;
+
+	FTimerHandle CollisionTimerHandle;
+	FTimerHandle DestroyTimerHandle;
 };

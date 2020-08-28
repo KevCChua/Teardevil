@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DestructibleComponent.h"
 #include "TeardevilGameMode.h"
+#include "TimerManager.h"
 
 // Sets default values
 ADestructableObject::ADestructableObject()
@@ -31,6 +32,7 @@ void ADestructableObject::BeginPlay()
 	Super::BeginPlay();
 	//OnActorHit.AddDynamic(this, &ADestructableObject::BeginOverlapDavid);
 	DestructibleComponent->OnComponentBeginOverlap.AddDynamic(this, &ADestructableObject::OnBeginOverLap);
+	DestructibleComponent->OnComponentFracture.AddDynamic(this, &ADestructableObject::OnFracture);
 	//DestructibleComponent->OnComponentBeginOverlap.AddDynamic(this, &ADestructableObject::OnBeginOverLapTest);
 	//RootComponent.BeginO
 	//OnActorBeginOverlap.AddDynamic(this, &ADestructableObject::OnBeginOverLap);
@@ -70,6 +72,17 @@ void ADestructableObject::OnHit(AActor* SelfActor, AActor* OtherActor, FVector N
 	}
 }
 
+void ADestructableObject::OnFracture(const FVector& HitPoint, const FVector& HitDirection)
+{
+	if(!this->Tags.Contains("Destroyed"))
+	{
+		this->Tags.Add("Destroyed");
+		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
+		GetWorld()->GetTimerManager().SetTimer(CollisionTimerHandle, this, &ADestructableObject::CollisionTimer, 4.0f, false);
+	}
+}
+
+
 void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	if(this->Tags.Contains("Destroyed"))
@@ -82,8 +95,9 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 		{
 			DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 			GEngine->AddOnScreenDebugMessage(25, 2.f, FColor::Green, FString::Printf(TEXT("PUCNCHING BREAK")));
-			((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
-			this->Tags.Add("Destroyed");
+			//((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
+			//this->Tags.Add("Destroyed");
+			//GetWorld()->GetTimerManager().SetTimer(CollisionTimerHandle, this, &ADestructableObject::CollisionTimer, 4.0f, false);
 			return;
 		}
 		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Player")));
@@ -96,6 +110,7 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 	{
 		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherComp->GetComponentLocation(), DamageRadius, ImpulseStrength, true);
 		GEngine->AddOnScreenDebugMessage(21, 2.f, FColor::Green, FString::Printf(TEXT("Im A Ragdoll")));
+		//GetWorld()->GetTimerManager().SetTimer(CollisionTimerHandle, this, &ADestructableObject::CollisionTimer, 4.0f, false);
 		return;
 	}
 	else if(bCanBulletBreak && OtherActor->Tags.Contains("Bullet"))
@@ -111,12 +126,24 @@ void ADestructableObject::OnBeginOverLap(class UPrimitiveComponent* OverlapCompo
 	{
 		DestructibleComponent->ApplyRadiusDamage(BaseDamage, OtherActor->GetActorLocation(), DamageRadius, ImpulseStrength, true);
 		GEngine->AddOnScreenDebugMessage(22, 2.f, FColor::Green, FString::Printf(TEXT("Yup I Broke")));
-		((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
-		this->Tags.Add("Destroyed");
+		//((ATeardevilGameMode*)GetWorld()->GetAuthGameMode())->ObjectDestroyed(Score, Name);
+		//this->Tags.Add("Destroyed");
+		//GetWorld()->GetTimerManager().SetTimer(CollisionTimerHandle, this, &ADestructableObject::CollisionTimer, 4.0f, false);
 		//OverlapComponent->SetCollisionProfileName("IgnoreOnlyPawn");
 		//OverlapComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		//ApplyRadiusDamage(float BaseDamage, const FVector& HurtOrigin, float DamageRadius, float ImpulseStrength, bool bFullDamage)
 	}
+}
+
+void ADestructableObject::CollisionTimer()
+{
+	DestructibleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetWorld()->GetTimerManager().SetTimer(DestroyTimerHandle, this, &ADestructableObject::DestroyTimer, 0.2f, false);
+}
+
+void ADestructableObject::DestroyTimer()
+{
+	DestructibleComponent->DestroyComponent();
 }
 
 
