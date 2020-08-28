@@ -58,7 +58,8 @@ public:
 		Enemies += 1.f;
 		AddToScore(_score, Name);
 		RefreshMultiTimer();
-		Multiplier += 0.5;
+		if (Multiplier + 0.5 <= 6.0f)
+			Multiplier += 0.5;
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -66,7 +67,8 @@ public:
 		Destructable += 1.f;
 		AddToScore(_score, Name);
 		RefreshMultiTimer();
-		Multiplier += 0.25;
+		if (Multiplier + 0.5 <= 6.0f)
+			Multiplier += 0.5;
 	}
 	
 	UFUNCTION(BlueprintCallable)
